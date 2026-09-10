@@ -166,7 +166,7 @@ For privacy questions, concerns, or data-related requests concerning Pulse AI:
 
 **Telegram Bot:** @Pulseaihealthbot
 
-**Email:** [ADD YOUR PRIVACY EMAIL HERE]
+**Email:** @Pulseaihealthbot
 
 ## 18. Important Emergency Notice
 
