@@ -1,6 +1,6 @@
 import os
+import re
 import logging
-from datetime import datetime, timezone
 
 from telegram import (
     Update,
@@ -35,22 +35,20 @@ if not OPENAI_API_KEY:
     raise RuntimeError("OPENAI_API_KEY is missing.")
 
 
-# --------------------------------------------------
-# Pulse Plus / Telegram Stars
-# --------------------------------------------------
+# ==================================================
+# PULSE PLUS / TELEGRAM STARS
+# ==================================================
 
 PULSE_PLUS_PRICE = 300
-
 PULSE_PLUS_PAYLOAD = "pulse_plus_monthly_v1"
 
-# Telegram recurring subscriptions currently use
-# exactly 30 days = 2,592,000 seconds.
+# 30 days
 PULSE_SUBSCRIPTION_PERIOD = 30 * 24 * 60 * 60
 
 
-# --------------------------------------------------
-# Privacy Policy
-# --------------------------------------------------
+# ==================================================
+# PRIVACY POLICY
+# ==================================================
 
 PRIVACY_POLICY_URL = (
     "https://github.com/Dr-meme-AA/"
@@ -58,18 +56,18 @@ PRIVACY_POLICY_URL = (
 )
 
 
-# --------------------------------------------------
-# OpenAI
-# --------------------------------------------------
+# ==================================================
+# OPENAI
+# ==================================================
 
 client = OpenAI(
     api_key=OPENAI_API_KEY
 )
 
 
-# --------------------------------------------------
-# Logging
-# --------------------------------------------------
+# ==================================================
+# LOGGING
+# ==================================================
 
 logging.basicConfig(
     format=(
@@ -148,7 +146,7 @@ doctors, pharmacists, or other qualified healthcare professionals.
 
 
 # ==================================================
-# BASIC TELEGRAM COMMANDS
+# START COMMAND
 # ==================================================
 
 async def start(
@@ -178,6 +176,10 @@ async def start(
     await update.message.reply_text(message)
 
 
+# ==================================================
+# HELP COMMAND
+# ==================================================
+
 async def help_command(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE
@@ -205,6 +207,10 @@ async def help_command(
 
     await update.message.reply_text(message)
 
+
+# ==================================================
+# PRIVACY COMMAND
+# ==================================================
 
 async def privacy(
     update: Update,
@@ -237,6 +243,10 @@ async def privacy(
     )
 
 
+# ==================================================
+# EMERGENCY COMMAND
+# ==================================================
+
 async def emergency(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE
@@ -258,31 +268,29 @@ async def emergency(
 
 
 # ==================================================
-# PULSE PLUS - TELEGRAM STARS
+# PULSE PLUS / TELEGRAM STARS
 # ==================================================
 
 async def upgrade_command(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE
 ):
-    """
-    Creates a recurring Telegram Stars subscription invoice.
-    """
-
     try:
+
         invoice_link = await context.bot.create_invoice_link(
             title="Pulse Plus",
+
             description=(
                 "Pulse Plus membership with increased "
                 "Pulse AI access. Renews every 30 days."
             ),
+
             payload=PULSE_PLUS_PAYLOAD,
 
-            # Telegram Stars
             provider_token="",
+
             currency="XTR",
 
-            # Stars use exactly one price component
             prices=[
                 LabeledPrice(
                     label="Pulse Plus - 30 days",
@@ -290,17 +298,13 @@ async def upgrade_command(
                 )
             ],
 
-            # Recurring every 30 days
             subscription_period=PULSE_SUBSCRIPTION_PERIOD,
         )
 
         keyboard = [
             [
                 InlineKeyboardButton(
-                    (
-                        f"⭐ Subscribe — "
-                        f"{PULSE_PLUS_PRICE} Stars"
-                    ),
+                    f"⭐ Subscribe — {PULSE_PLUS_PRICE} Stars",
                     url=invoice_link,
                 )
             ]
@@ -332,6 +336,7 @@ async def upgrade_command(
         )
 
     except Exception as error:
+
         logger.exception(
             "Error creating Pulse Plus invoice: %s",
             error
@@ -352,17 +357,12 @@ async def precheckout_callback(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE
 ):
-    """
-    Telegram sends this before charging the user.
-    We verify that the invoice belongs to Pulse Plus.
-    """
-
     query = update.pre_checkout_query
 
     if not query:
         return
 
-    # Verify the invoice payload
+    # Verify Pulse Plus invoice
     if query.invoice_payload != PULSE_PLUS_PAYLOAD:
 
         logger.warning(
@@ -381,7 +381,7 @@ async def precheckout_callback(
 
         return
 
-    # Verify the currency
+    # Verify Telegram Stars
     if query.currency != "XTR":
 
         await query.answer(
@@ -394,7 +394,7 @@ async def precheckout_callback(
 
         return
 
-    # Verify exact price
+    # Verify price
     if query.total_amount != PULSE_PLUS_PRICE:
 
         await query.answer(
@@ -407,7 +407,6 @@ async def precheckout_callback(
 
         return
 
-    # Everything is valid
     await query.answer(ok=True)
 
 
@@ -419,10 +418,6 @@ async def successful_payment_callback(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE
 ):
-    """
-    Called only after Telegram confirms successful payment.
-    """
-
     if not update.message:
         return
 
@@ -433,48 +428,43 @@ async def successful_payment_callback(
 
     user = update.effective_user
 
-    # Final security verification
+    # Final payment validation
     if (
         payment.currency != "XTR"
         or payment.invoice_payload != PULSE_PLUS_PAYLOAD
         or payment.total_amount != PULSE_PLUS_PRICE
     ):
+
         logger.warning(
             "Unexpected successful payment data for user %s",
             user.id if user else "unknown",
         )
+
         return
 
     # --------------------------------------------------
-    # TEMPORARY ACTIVE STATUS
+    # TEMPORARY PLUS STATUS
     # --------------------------------------------------
-    #
-    # This marks the user as Plus while the current
-    # bot process is running.
-    #
-    # Later we will move this information to the
-    # permanent Railway database so it survives
-    # redeployments and restarts.
+    # This remains in memory only.
+    # Later this should move to PostgreSQL.
     # --------------------------------------------------
 
     context.user_data["pulse_plan"] = "PLUS"
 
-    context.user_data["telegram_payment_charge_id"] = (
-        payment.telegram_payment_charge_id
-    )
+    context.user_data[
+        "telegram_payment_charge_id"
+    ] = payment.telegram_payment_charge_id
 
     if payment.subscription_expiration_date:
-        context.user_data["subscription_expiration_date"] = (
-            payment.subscription_expiration_date
-        )
 
-    context.user_data["is_recurring"] = bool(
-        payment.is_recurring
-    )
+        context.user_data[
+            "subscription_expiration_date"
+        ] = payment.subscription_expiration_date
 
-    # --------------------------------------------------
-    # Log payment safely
-    # --------------------------------------------------
+    context.user_data[
+        "is_recurring"
+    ] = bool(payment.is_recurring)
+
 
     logger.info(
         (
@@ -494,9 +484,6 @@ async def successful_payment_callback(
         payment.subscription_expiration_date,
     )
 
-    # --------------------------------------------------
-    # Show expiration
-    # --------------------------------------------------
 
     if payment.subscription_expiration_date:
 
@@ -507,11 +494,9 @@ async def successful_payment_callback(
         )
 
     else:
+
         expiration_text = "30 days from purchase"
 
-    # --------------------------------------------------
-    # Confirmation to customer
-    # --------------------------------------------------
 
     message = (
         "✅ PULSE PLUS ACTIVATED\n\n"
@@ -535,17 +520,13 @@ async def successful_payment_callback(
 
 
 # ==================================================
-# ACCOUNT STATUS
+# ACCOUNT COMMAND
 # ==================================================
 
 async def account_command(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE
 ):
-    """
-    Shows the user's current Pulse AI plan.
-    """
-
     plan = context.user_data.get(
         "pulse_plan",
         "FREE"
@@ -564,7 +545,9 @@ async def account_command(
             )
 
         else:
+
             expiration_text = "Active"
+
 
         message = (
             "💚 PULSE AI ACCOUNT\n\n"
@@ -637,6 +620,89 @@ async def handle_message(
     if not user_message:
         return
 
+    chat = update.effective_chat
+
+
+    # ==================================================
+    # GROUP / SUPERGROUP BEHAVIOR
+    # ==================================================
+    #
+    # Pulse AI must stay completely silent unless
+    # somebody explicitly mentions:
+    #
+    # @Pulseaihealthbot
+    #
+    # ==================================================
+
+    if chat.type in ("group", "supergroup"):
+
+        # Get actual Telegram username dynamically
+        bot_username = context.bot.username
+
+        if not bot_username:
+            logger.warning(
+                "Could not determine bot username."
+            )
+            return
+
+        bot_mention = f"@{bot_username}"
+
+        # Match @Pulseaihealthbot regardless of capitalization
+        mention_pattern = re.compile(
+            rf"(?<!\w){re.escape(bot_mention)}(?!\w)",
+            re.IGNORECASE,
+        )
+
+        # ----------------------------------------------
+        # NO MENTION = DO NOTHING
+        # ----------------------------------------------
+
+        if not mention_pattern.search(user_message):
+
+            logger.debug(
+                "Ignoring group message because bot "
+                "was not mentioned."
+            )
+
+            return
+
+
+        # ----------------------------------------------
+        # REMOVE @Pulseaihealthbot
+        # BEFORE SENDING QUESTION TO OPENAI
+        # ----------------------------------------------
+
+        user_message = mention_pattern.sub(
+            "",
+            user_message
+        ).strip()
+
+
+        # ----------------------------------------------
+        # USER MENTIONED BOT BUT ASKED NOTHING
+        # ----------------------------------------------
+
+        if not user_message:
+
+            await update.message.reply_text(
+                "💓 Hi! Please ask me your health question.\n\n"
+
+                "Example:\n"
+
+                f"{bot_mention} "
+                "I have a fever and cough. What should I do?\n\n"
+
+                "For more private health questions, you can also "
+                "message me directly."
+            )
+
+            return
+
+
+    # ==================================================
+    # SEND HEALTH QUESTION TO OPENAI
+    # ==================================================
+
     try:
 
         await update.message.chat.send_action(
@@ -653,12 +719,18 @@ async def handle_message(
         answer = response.output_text
 
         if not answer:
+
             answer = (
                 "Sorry, I couldn't generate a response. "
                 "Please try again."
             )
 
-        await update.message.reply_text(answer)
+
+        # Reply directly to the user's message
+        await update.message.reply_text(
+            answer
+        )
+
 
     except Exception as error:
 
@@ -685,76 +757,84 @@ def main():
         .build()
     )
 
+
+    # ==================================================
+    # PRIVATE CHAT ONLY
+    # ==================================================
+
+    private_only = filters.ChatType.PRIVATE
+
+
     # --------------------------------------------------
-    # Normal commands
+    # Private commands
     # --------------------------------------------------
 
     application.add_handler(
         CommandHandler(
             "start",
-            start
+            start,
+            filters=private_only,
         )
     )
 
     application.add_handler(
         CommandHandler(
             "help",
-            help_command
+            help_command,
+            filters=private_only,
         )
     )
 
     application.add_handler(
         CommandHandler(
             "privacy",
-            privacy
+            privacy,
+            filters=private_only,
         )
     )
 
     application.add_handler(
         CommandHandler(
             "emergency",
-            emergency
+            emergency,
+            filters=private_only,
         )
     )
-
-    # --------------------------------------------------
-    # Payment / subscription commands
-    # --------------------------------------------------
 
     application.add_handler(
         CommandHandler(
             "upgrade",
-            upgrade_command
+            upgrade_command,
+            filters=private_only,
         )
     )
 
     application.add_handler(
         CommandHandler(
             "account",
-            account_command
+            account_command,
+            filters=private_only,
         )
     )
 
     application.add_handler(
         CommandHandler(
             "paysupport",
-            paysupport_command
+            paysupport_command,
+            filters=private_only,
         )
     )
 
-    # --------------------------------------------------
-    # Telegram payment verification
-    # --------------------------------------------------
+
+    # ==================================================
+    # PAYMENT HANDLERS
+    # ==================================================
 
     application.add_handler(
         PreCheckoutQueryHandler(
             precheckout_callback
         )
     )
-
-    # --------------------------------------------------
-    # Successful Telegram Stars payment
-    # --------------------------------------------------
 
     application.add_handler(
         MessageHandler(
@@ -763,9 +843,18 @@ def main():
         )
     )
 
-    # --------------------------------------------------
-    # Normal health questions
-    # --------------------------------------------------
+
+    # ==================================================
+    # NORMAL TEXT / HEALTH QUESTIONS
+    # ==================================================
+    #
+    # PRIVATE CHAT:
+    #   Answer normally.
+    #
+    # GROUP:
+    #   handle_message() checks for @Pulseaihealthbot.
+    #
+    # ==================================================
 
     application.add_handler(
         MessageHandler(
@@ -774,9 +863,11 @@ def main():
         )
     )
 
+
     logger.info(
         "Pulse AI is running..."
     )
+
 
     application.run_polling(
         drop_pending_updates=True
