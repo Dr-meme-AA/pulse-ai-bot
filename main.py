@@ -4,7 +4,8 @@ import math
 import base64
 import tempfile
 import logging
-from datetime import datetime, timezone
+import asyncio
+from datetime import datetime, timezone, timedelta
 
 import httpx
 
@@ -22,6 +23,8 @@ from telegram.ext import (
     CommandHandler,
     MessageHandler,
     PreCheckoutQueryHandler,
+    CallbackQueryHandler,
+    ConversationHandler,
     ContextTypes,
     filters,
 )
@@ -81,6 +84,25 @@ GOOGLE_FIELD_MASK = ",".join(
         "places.primaryTypeDisplayName",
     ]
 )
+
+
+# ==================================================
+# MEDICATION REMINDER CONVERSATION STATES
+# ==================================================
+
+(
+    MED_NAME,
+    MED_STRENGTH,
+    MED_SOURCE,
+    MED_INTERVAL,
+    MED_INTERVAL_CUSTOM,
+    MED_START,
+    MED_DURATION,
+    MED_CONFIRM,
+) = range(100, 108)
+
+REMINDER_POLL_SECONDS = 30
+
 
 
 # ==================================================
@@ -168,36 +190,71 @@ The user has provided a health-related image.
 """
 
 MEDICATION_PROMPT = """
-When the user asks what medicine to take, asks about a tablet, or sends
-medicine information, follow these medication-safety rules:
+You are Pulse AI Medication Guidance.
 
-1. Medication information is educational and for symptom relief only;
-   it is not a prescription or a cure.
-2. Prefer common over-the-counter options only when appropriate.
-3. Do not recommend starting prescription antibiotics, prescription
-   steroids, controlled medicines, sedatives, or changing an existing
-   prescription without clinician direction.
-4. Before giving a specific tablet count or dose, make sure the necessary
-   details are known. Depending on the medicine this can include age,
-   exact active ingredient, exact strength/concentration, allergies,
-   pregnancy/breastfeeding, liver/kidney disease, stomach ulcers,
-   blood thinners, and other regular medicines.
-5. For children, do not provide a calculated dose unless the child's age,
-   current weight, exact medicine, and exact concentration/strength are
-   known. Encourage confirmation with a pharmacist or clinician.
-6. If essential details are missing, ask for them instead of guessing.
-7. When a standard OTC label dose is appropriate and enough information
-   is available, it may be explained cautiously, together with maximum
-   label limits and contraindication warnings.
-8. Always remind the user to follow the package label and confirm with a
-   pharmacist or doctor if uncertain, if they have medical conditions,
-   take other medicines, have allergies, are pregnant/breastfeeding, or
-   are treating a child.
-9. After useful medication guidance, offer to help find a nearby pharmacy
-   by telling the user they can say: "Find a pharmacy near me".
-10. Medication reminders must reflect a schedule the user confirms came
-    from their doctor, pharmacist, or medicine label; Pulse AI must not
-    invent a treatment schedule.
+Your role is to provide cautious, general medication information and
+support safe next steps.
+
+CORE RULES:
+- You are not prescribing medication.
+- Do not claim that a medicine will cure the user's condition.
+- Prefer common OTC symptom-relief information only when appropriate.
+- Do not recommend starting prescription-only medicines, antibiotics,
+  prescription steroids, controlled medicines, sedatives, or changing
+  an existing prescription without professional review.
+- Never invent a treatment schedule.
+
+BEFORE SPECIFIC DOSING:
+Consider whether you need:
+- age
+- weight, especially for children
+- pregnancy or breastfeeding status
+- medication allergies
+- liver disease
+- kidney disease
+- stomach ulcer or gastrointestinal bleeding history
+- blood thinners
+- other regular medicines
+- exact medicine name
+- exact active ingredient
+- exact strength/concentration
+
+CHILDREN:
+- Do not guess pediatric dosing.
+- Before discussing a pediatric dose, require age, current weight,
+  exact medicine name, and exact strength/concentration.
+- Encourage confirmation with a pharmacist or clinician.
+
+MEDICINE PHOTOS:
+- Identification is based only on what is clearly visible.
+- Ask the user to verify the exact medicine name and strength printed
+  on the original packaging.
+- Do not identify an unknown loose tablet from appearance alone.
+- Do not create a medication reminder until the user confirms the
+  medicine and the schedule.
+
+DOSING:
+- If discussing an OTC medicine, explain that the user should follow the
+  package label and confirm suitability with a pharmacist or doctor if
+  uncertain.
+- If required safety information is missing, ask for it instead of guessing.
+- When a standard OTC label dose is appropriate and the relevant details
+  are known, explain it cautiously together with important contraindications
+  and maximum label limits.
+
+REMINDERS:
+- Pulse AI may remind the user only of a schedule the user explicitly
+  confirms came from their doctor, pharmacist, or the medicine label.
+- A reminder is not a prescription, authorization, or treatment decision.
+
+SAFETY:
+- If symptoms suggest an emergency or require professional assessment,
+  prioritize that over medication suggestions.
+- Encourage pharmacist or doctor confirmation when there are medical
+  conditions, allergies, pregnancy/breastfeeding, other medicines,
+  uncertain dosing, or a child is being treated.
+
+Reply in the user's language.
 """
 
 
@@ -234,11 +291,19 @@ NEAR_ME_TERMS = [
 ]
 
 MEDICATION_TERMS = [
+    # English
     "medicine", "medication", "tablet", "tablets", "pill", "pills",
-    "painkiller", "dose", "dosage", "what can i take", "what should i take",
-    "paracetamol", "acetaminophen", "ibuprofen", "دواء", "دواء", "دوائي",
-    "حبوب", "حبة", "جرعة", "مسكن", "ماذا آخذ", "وش آخذ", "شنو آخذ",
-    "باراسيتامول", "بنادول", "ايبوبروفين", "إيبوبروفين",
+    "capsule", "capsules", "painkiller", "pain killer", "dose", "dosage",
+    "what can i take", "what should i take", "can i take",
+    "how many tablets", "how many pills", "paracetamol", "acetaminophen",
+    "ibuprofen", "antihistamine", "cough syrup", "pharmacist", "pharmacy",
+
+    # Arabic
+    "دواء", "أدوية", "ادوية", "دوائي", "حبة", "حبوب", "قرص", "أقراص",
+    "اقراص", "كبسولة", "كبسولات", "مسكن", "باراسيتامول", "بنادول",
+    "ايبوبروفين", "إيبوبروفين", "جرعة", "كم حبة", "كم قرص",
+    "ماذا آخذ", "ماذا اخذ", "شنو آخذ", "شنو اخذ", "وش آخذ", "صيدلية",
+    "صيدلي",
 ]
 
 
@@ -391,6 +456,671 @@ async def record_and_show_usage(update: Update, context: ContextTypes.DEFAULT_TY
         await update.effective_message.reply_text(
             f"{prefix}: {used}/{limit} used • {remaining} remaining"
         )
+
+
+# ==================================================
+# MEDICATION GUIDANCE + PHARMACY ACTIONS
+# ==================================================
+
+def medication_action_keyboard(arabic: bool = False):
+    if arabic:
+        pharmacy_text = "💊 ابحث عن صيدلية قريبة"
+        reminder_text = "⏰ إعداد تذكير للدواء"
+    else:
+        pharmacy_text = "💊 Find nearby pharmacy"
+        reminder_text = "⏰ Set medication reminder"
+
+    return InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    pharmacy_text,
+                    callback_data="med_find_pharmacy",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    reminder_text,
+                    callback_data="med_set_reminder",
+                )
+            ],
+        ]
+    )
+
+
+async def handle_medication_question(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    user_message: str,
+):
+    try:
+        await update.effective_message.chat.send_action(action="typing")
+
+        response = await client.responses.create(
+            model=HEALTH_MODEL,
+            instructions=SYSTEM_PROMPT + "\n\n" + MEDICATION_PROMPT,
+            input=user_message,
+            max_output_tokens=900,
+            store=False,
+        )
+
+        answer = (
+            response.output_text
+            or "I couldn't generate reliable medication guidance for that question. "
+               "Please confirm with a pharmacist or doctor."
+        )
+
+        arabic = contains_arabic(user_message)
+
+        if arabic:
+            footer = (
+                "\n\n💊 سلامة الدواء\n"
+                "هذه معلومات عامة وليست وصفة طبية أو علاجاً مؤكداً. "
+                "اتبع تعليمات العبوة، وتأكد من الصيدلي أو الطبيب إذا كنت غير متأكد، "
+                "أو لديك حساسية أو أمراض مزمنة أو تستخدم أدوية أخرى، أو في حالة الحمل "
+                "والرضاعة، أو عند إعطاء الدواء لطفل."
+            )
+        else:
+            footer = (
+                "\n\n💊 Medication Safety\n"
+                "This is general information, not a prescription or a cure. "
+                "Follow the medicine label and confirm the medicine and dose with a "
+                "pharmacist or doctor if you are unsure, have allergies, take other "
+                "medicines, are pregnant/breastfeeding, have medical conditions, "
+                "or are treating a child."
+            )
+
+        await update.effective_message.reply_text(
+            answer + footer,
+            reply_markup=medication_action_keyboard(arabic),
+        )
+
+        await record_and_show_usage(update, context)
+
+    except Exception as exc:
+        logger.exception("Medication guidance error: %s", exc)
+        await update.effective_message.reply_text(
+            "💊 Pulse AI couldn't complete the medication guidance right now. "
+            "Please try again or confirm with a pharmacist."
+        )
+
+
+async def handle_med_find_pharmacy(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+):
+    query = update.callback_query
+    if query:
+        await query.answer()
+
+    if update.effective_chat.type != "private":
+        await send_private_care_link(update, context)
+        return
+
+    search_text = (
+        "صيدلية قريبة مني"
+        if contains_arabic((query.message.text if query and query.message else "") or "")
+        else "pharmacy near me"
+    )
+
+    await perform_care_search(
+        update,
+        context,
+        search_text,
+    )
+
+
+# ==================================================
+# MEDICATION REMINDER SETUP
+# ==================================================
+
+async def start_medication_reminder(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+):
+    if update.callback_query:
+        await update.callback_query.answer()
+
+    if update.effective_chat.type != "private":
+        bot_username = context.bot.username or "Pulseaihealthbot"
+        markup = InlineKeyboardMarkup(
+            [[
+                InlineKeyboardButton(
+                    "🔒 Open private reminder setup",
+                    url=f"https://t.me/{bot_username}?start=reminder",
+                )
+            ]]
+        )
+        await update.effective_message.reply_text(
+            "🔒 Medication reminders are set up in private chat.",
+            reply_markup=markup,
+        )
+        return ConversationHandler.END
+
+    context.user_data["med_reminder_draft"] = {}
+
+    await update.effective_message.reply_text(
+        "⏰ Medication Reminder Setup\n\n"
+        "Type the exact medicine name shown on the original package or confirmed "
+        "by your doctor/pharmacist.\n\n"
+        "Example: Paracetamol\n\n"
+        "Send /cancel to stop setup."
+    )
+    return MED_NAME
+
+
+async def med_name_message(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+):
+    name = (update.message.text or "").strip()
+    if len(name) < 2:
+        await update.message.reply_text("Please type the exact medicine name.")
+        return MED_NAME
+
+    context.user_data["med_reminder_draft"]["medicine_name"] = name
+
+    await update.message.reply_text(
+        "Now type the exact strength/concentration shown on the package.\n\n"
+        "Examples:\n"
+        "• 500 mg\n"
+        "• 250 mg/5 mL\n"
+        "• 10 mg\n\n"
+        "If strength does not apply, type: N/A"
+    )
+    return MED_STRENGTH
+
+
+async def med_strength_message(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+):
+    strength = (update.message.text or "").strip()
+    if not strength:
+        await update.message.reply_text("Please enter the strength or type N/A.")
+        return MED_STRENGTH
+
+    context.user_data["med_reminder_draft"]["medicine_strength"] = strength
+
+    markup = InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    "✅ Yes — confirmed",
+                    callback_data="med_source_yes",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "❌ No / not sure",
+                    callback_data="med_source_no",
+                )
+            ],
+        ]
+    )
+
+    await update.message.reply_text(
+        "Safety check:\n\n"
+        "Was the dosing schedule you want me to remind you about given by your "
+        "doctor, pharmacist, or written on the medicine label?\n\n"
+        "Pulse AI will not invent a medication schedule.",
+        reply_markup=markup,
+    )
+    return MED_SOURCE
+
+
+async def med_source_callback(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+):
+    query = update.callback_query
+    await query.answer()
+
+    if query.data == "med_source_no":
+        context.user_data.pop("med_reminder_draft", None)
+        await query.message.reply_text(
+            "No reminder was created.\n\n"
+            "Please confirm the medicine schedule with a pharmacist, doctor, or "
+            "the medicine label first. Then you can use /remindmedicine again."
+        )
+        return ConversationHandler.END
+
+    context.user_data["med_reminder_draft"]["source_confirmed"] = True
+
+    markup = InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton("Every 6 hours", callback_data="med_interval_6"),
+                InlineKeyboardButton("Every 8 hours", callback_data="med_interval_8"),
+            ],
+            [
+                InlineKeyboardButton("Every 12 hours", callback_data="med_interval_12"),
+                InlineKeyboardButton("Once daily", callback_data="med_interval_24"),
+            ],
+            [
+                InlineKeyboardButton("Custom interval", callback_data="med_interval_custom"),
+            ],
+        ]
+    )
+
+    await query.message.reply_text(
+        "Select the schedule you were actually given.\n\n"
+        "Do not choose a schedule based on what seems convenient.",
+        reply_markup=markup,
+    )
+    return MED_INTERVAL
+
+
+async def med_interval_callback(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+):
+    query = update.callback_query
+    await query.answer()
+
+    value = query.data.replace("med_interval_", "")
+
+    if value == "custom":
+        await query.message.reply_text(
+            "Type the number of hours between doses exactly as you were instructed.\n\n"
+            "Example: 4\n\n"
+            "For schedules that are not a regular hourly interval, please confirm "
+            "with a pharmacist before using this beta reminder."
+        )
+        return MED_INTERVAL_CUSTOM
+
+    interval_hours = float(value)
+    draft = context.user_data["med_reminder_draft"]
+    draft["interval_hours"] = interval_hours
+    draft["schedule_text"] = (
+        "Once daily" if interval_hours == 24 else f"Every {int(interval_hours)} hours"
+    )
+
+    return await ask_med_start(query.message, context)
+
+
+async def med_interval_custom_message(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+):
+    raw = (update.message.text or "").strip()
+
+    try:
+        interval_hours = float(raw)
+    except ValueError:
+        await update.message.reply_text(
+            "Please enter only the number of hours, for example: 4"
+        )
+        return MED_INTERVAL_CUSTOM
+
+    if interval_hours < 1 or interval_hours > 168:
+        await update.message.reply_text(
+            "For this beta reminder, enter an interval between 1 and 168 hours."
+        )
+        return MED_INTERVAL_CUSTOM
+
+    draft = context.user_data["med_reminder_draft"]
+    draft["interval_hours"] = interval_hours
+    draft["schedule_text"] = f"Every {interval_hours:g} hours"
+
+    return await ask_med_start(update.message, context)
+
+
+async def ask_med_start(
+    message,
+    context: ContextTypes.DEFAULT_TYPE,
+):
+    markup = InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    "✅ I just took the dose",
+                    callback_data="med_start_taken_now",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "⏰ Dose is due now",
+                    callback_data="med_start_due_now",
+                )
+            ],
+        ]
+    )
+
+    await message.reply_text(
+        "When should the reminder cycle start?\n\n"
+        "For this beta, reminders use a relative interval from the time you confirm "
+        "the schedule, so no timezone is required.",
+        reply_markup=markup,
+    )
+    return MED_START
+
+
+async def med_start_callback(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+):
+    query = update.callback_query
+    await query.answer()
+
+    draft = context.user_data["med_reminder_draft"]
+    interval = float(draft["interval_hours"])
+    now = datetime.now(timezone.utc)
+
+    if query.data == "med_start_taken_now":
+        draft["next_due_at"] = now + timedelta(hours=interval)
+        draft["start_text"] = f"Next reminder in {interval:g} hours"
+    else:
+        draft["next_due_at"] = now
+        draft["start_text"] = "First reminder is due now"
+
+    markup = InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton("1 day", callback_data="med_duration_1"),
+                InlineKeyboardButton("3 days", callback_data="med_duration_3"),
+                InlineKeyboardButton("5 days", callback_data="med_duration_5"),
+            ],
+            [
+                InlineKeyboardButton("7 days", callback_data="med_duration_7"),
+                InlineKeyboardButton("14 days", callback_data="med_duration_14"),
+                InlineKeyboardButton("30 days", callback_data="med_duration_30"),
+            ],
+            [
+                InlineKeyboardButton(
+                    "Until I stop it",
+                    callback_data="med_duration_open",
+                )
+            ],
+        ]
+    )
+
+    await query.message.reply_text(
+        "How long should Pulse keep sending this reminder?\n\n"
+        "Choose the duration that matches the instructions you were given.",
+        reply_markup=markup,
+    )
+    return MED_DURATION
+
+
+async def med_duration_callback(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+):
+    query = update.callback_query
+    await query.answer()
+
+    draft = context.user_data["med_reminder_draft"]
+    value = query.data.replace("med_duration_", "")
+
+    if value == "open":
+        draft["end_at"] = None
+        draft["duration_text"] = "Until you stop it"
+    else:
+        days = int(value)
+        draft["end_at"] = datetime.now(timezone.utc) + timedelta(days=days)
+        draft["duration_text"] = f"{days} day" if days == 1 else f"{days} days"
+
+    name = draft["medicine_name"]
+    strength = draft["medicine_strength"]
+    schedule = draft["schedule_text"]
+    start_text = draft["start_text"]
+    duration_text = draft["duration_text"]
+
+    markup = InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    "✅ Confirm reminder",
+                    callback_data="med_confirm_yes",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "❌ Cancel",
+                    callback_data="med_confirm_no",
+                )
+            ],
+        ]
+    )
+
+    await query.message.reply_text(
+        "⏰ Confirm Medication Reminder\n\n"
+        f"Medicine: {name}\n"
+        f"Strength: {strength}\n"
+        f"Schedule: {schedule}\n"
+        f"Start: {start_text}\n"
+        f"Duration: {duration_text}\n\n"
+        "⚠️ Pulse AI is only reminding you of the schedule you confirmed came "
+        "from your doctor, pharmacist, or medicine label. It is not prescribing "
+        "or changing your treatment.",
+        reply_markup=markup,
+    )
+    return MED_CONFIRM
+
+
+async def med_confirm_callback(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+):
+    query = update.callback_query
+    await query.answer()
+
+    if query.data == "med_confirm_no":
+        context.user_data.pop("med_reminder_draft", None)
+        await query.message.reply_text("❌ Medication reminder cancelled.")
+        return ConversationHandler.END
+
+    user = update.effective_user
+    draft = context.user_data.get("med_reminder_draft", {})
+
+    if not user or not draft.get("source_confirmed"):
+        await query.message.reply_text(
+            "I couldn't verify the reminder setup. Please start again with /remindmedicine."
+        )
+        context.user_data.pop("med_reminder_draft", None)
+        return ConversationHandler.END
+
+    reminder_id = await db.create_medication_reminder(
+        telegram_user_id=user.id,
+        medicine_name=draft["medicine_name"],
+        medicine_strength=draft["medicine_strength"],
+        schedule_text=draft["schedule_text"],
+        next_due_at=draft["next_due_at"],
+        interval_hours=draft["interval_hours"],
+        end_at=draft["end_at"],
+    )
+
+    await query.message.reply_text(
+        "✅ Medication reminder saved.\n\n"
+        f"Reminder ID: {reminder_id}\n"
+        f"Medicine: {draft['medicine_name']} {draft['medicine_strength']}\n"
+        f"Schedule: {draft['schedule_text']}\n\n"
+        "Use /reminders to view active reminders.\n\n"
+        "⚠️ Continue following the instructions from your doctor, pharmacist, "
+        "or medicine label."
+    )
+
+    context.user_data.pop("med_reminder_draft", None)
+    return ConversationHandler.END
+
+
+async def cancel_medication_reminder(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+):
+    context.user_data.pop("med_reminder_draft", None)
+    await update.effective_message.reply_text("❌ Medication reminder setup cancelled.")
+    return ConversationHandler.END
+
+
+async def reminders_command(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+):
+    user = update.effective_user
+    if not user:
+        return
+
+    reminders = await db.list_active_reminders(user.id)
+
+    if not reminders:
+        await update.message.reply_text(
+            "⏰ You don't have any active medication reminders.\n\n"
+            "Use /remindmedicine to create one."
+        )
+        return
+
+    await update.message.reply_text(
+        f"⏰ Active Medication Reminders: {len(reminders)}"
+    )
+
+    for reminder in reminders:
+        strength = reminder["medicine_strength"] or ""
+        text = (
+            f"💊 {reminder['medicine_name']} {strength}\n"
+            f"Schedule: {reminder['schedule_text']}\n"
+            f"Reminder ID: {reminder['id']}"
+        )
+        markup = InlineKeyboardMarkup(
+            [[
+                InlineKeyboardButton(
+                    "🛑 Stop reminder",
+                    callback_data=f"rem_stop:{reminder['id']}",
+                )
+            ]]
+        )
+        await update.message.reply_text(text, reply_markup=markup)
+
+
+async def _owns_active_reminder(user_id: int, reminder_id: int) -> bool:
+    reminders = await db.list_active_reminders(user_id)
+    return any(int(row["id"]) == reminder_id for row in reminders)
+
+
+async def handle_reminder_action(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+):
+    query = update.callback_query
+    await query.answer()
+
+    user = update.effective_user
+    if not user:
+        return
+
+    try:
+        action, raw_id = query.data.split(":", 1)
+        reminder_id = int(raw_id)
+    except (ValueError, AttributeError):
+        return
+
+    if not await _owns_active_reminder(user.id, reminder_id):
+        await query.message.reply_text(
+            "This reminder is no longer active or does not belong to this account."
+        )
+        return
+
+    if action == "rem_taken":
+        await db.mark_reminder_taken(reminder_id)
+        await query.message.reply_text("✅ Marked as taken.")
+
+    elif action == "rem_snooze":
+        await db.advance_reminder(
+            reminder_id,
+            datetime.now(timezone.utc) + timedelta(minutes=15),
+        )
+        await query.message.reply_text("⏰ Snoozed for 15 minutes.")
+
+    elif action == "rem_stop":
+        await db.stop_reminder(reminder_id, user.id)
+        await query.message.reply_text("🛑 Medication reminder stopped.")
+
+
+async def medication_reminder_worker(application: Application):
+    while True:
+        try:
+            due_reminders = await db.get_due_reminders(limit=100)
+            now = datetime.now(timezone.utc)
+
+            for reminder in due_reminders:
+                reminder_id = int(reminder["id"])
+                user_id = int(reminder["telegram_user_id"])
+                medicine = reminder["medicine_name"]
+                strength = reminder["medicine_strength"] or ""
+                schedule = reminder["schedule_text"]
+                interval = float(reminder["interval_hours"] or 0)
+                end_at = reminder["end_at"]
+
+                markup = InlineKeyboardMarkup(
+                    [
+                        [
+                            InlineKeyboardButton(
+                                "✅ Taken",
+                                callback_data=f"rem_taken:{reminder_id}",
+                            ),
+                            InlineKeyboardButton(
+                                "⏰ Snooze 15 min",
+                                callback_data=f"rem_snooze:{reminder_id}",
+                            ),
+                        ],
+                        [
+                            InlineKeyboardButton(
+                                "🛑 Stop reminder",
+                                callback_data=f"rem_stop:{reminder_id}",
+                            )
+                        ],
+                    ]
+                )
+
+                try:
+                    await application.bot.send_message(
+                        chat_id=user_id,
+                        text=(
+                            "💊 Pulse Medication Reminder\n\n"
+                            f"It's time for your confirmed medication:\n"
+                            f"{medicine} {strength}\n\n"
+                            f"Confirmed schedule: {schedule}\n\n"
+                            "Follow the instructions given by your doctor, pharmacist, "
+                            "or medicine label.\n\n"
+                            "⚠️ Pulse AI is reminding you of the schedule you confirmed; "
+                            "it is not prescribing or changing your medication."
+                        ),
+                        reply_markup=markup,
+                    )
+
+                    if interval <= 0:
+                        await db.stop_reminder(reminder_id, user_id)
+                        continue
+
+                    next_due = reminder["next_due_at"] + timedelta(hours=interval)
+                    while next_due <= now:
+                        next_due += timedelta(hours=interval)
+
+                    if end_at is not None and next_due > end_at:
+                        await db.stop_reminder(reminder_id, user_id)
+                    else:
+                        await db.advance_reminder(reminder_id, next_due)
+
+                except Exception as exc:
+                    logger.exception(
+                        "Could not deliver medication reminder %s: %s",
+                        reminder_id,
+                        exc,
+                    )
+                    # Avoid retrying every 30 seconds after a transient delivery error.
+                    await db.advance_reminder(
+                        reminder_id,
+                        datetime.now(timezone.utc) + timedelta(minutes=5),
+                    )
+
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            logger.exception("Medication reminder worker error: %s", exc)
+
+        await asyncio.sleep(REMINDER_POLL_SECONDS)
+
 
 
 # ==================================================
@@ -668,24 +1398,37 @@ async def perform_care_search(update: Update, context: ContextTypes.DEFAULT_TYPE
 # ==================================================
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if context.args and context.args[0].lower() == "care":
-        await update.message.reply_text(
-            "📍 Welcome to Pulse Care Finder. Tell me what you need, such as pediatrician, dentist, hospital, specialist, or pharmacy."
-        )
-        await request_user_location(update, context)
-        return
+    if context.args:
+        mode = context.args[0].lower()
+
+        if mode == "care":
+            await update.message.reply_text(
+                "📍 Welcome to Pulse Care Finder. Tell me what you need, such as "
+                "pediatrician, dentist, hospital, specialist, or pharmacy."
+            )
+            await request_user_location(update, context)
+            return
+
+        if mode == "reminder":
+            await update.message.reply_text(
+                "⏰ Medication reminders are set up privately.\n\n"
+                "Send /remindmedicine to begin."
+            )
+            return
 
     await update.message.reply_text(
         f"💓 Welcome to {PROJECT_NAME}\n\n"
         "You can use:\n"
         "💬 Health questions\n"
-        "📷 Health-related photos\n"
+        "📷 Health-related photos and medicine packaging\n"
         "🎙 Voice notes\n"
         "📍 Hospitals, clinics, specialists and pharmacies\n"
         "💊 General OTC medication guidance\n"
+        "⏰ Medication reminders based on schedules you confirm\n"
         "🌐 English or Arabic\n\n"
         f"🎁 You have {FREE_QUESTION_LIMIT} free test questions.\n\n"
-        "⚠️ Pulse AI provides general health information and is not a doctor or emergency service."
+        "⚠️ Pulse AI provides general health information and is not a doctor, "
+        "pharmacist, or emergency service."
     )
 
 
@@ -693,10 +1436,13 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "💓 Pulse AI Help\n\n"
         "💬 Ask a health question\n"
-        "📷 Send a health-related photo with an explanation\n"
+        "📷 Send a health-related photo or medicine package with an explanation\n"
         "🎙 Send a voice note\n"
         "📍 Ask: 'Find a pediatrician near me' or 'Dentist in Doha'\n"
-        "💊 Ask about a common OTC medicine or send a clear photo of its packaging\n\n"
+        "💊 Ask about common OTC medicine information\n"
+        "⏰ Use /remindmedicine to set a reminder for a schedule already confirmed "
+        "by your doctor, pharmacist, or medicine label\n"
+        "📋 Use /reminders to view active reminders\n\n"
         f"Support: {PROJECT_TELEGRAM_SUPPORT}\n"
         f"Email: {PROJECT_SUPPORT_EMAIL}\n"
         f"X: {PROJECT_X}\n\n"
@@ -909,29 +1655,31 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await perform_care_search(update, context, user_message)
         return
 
+    if looks_like_medication_question(user_message):
+        if not await check_question_access(update, context):
+            return
+
+        await handle_medication_question(
+            update,
+            context,
+            user_message,
+        )
+        return
+
     if not await check_question_access(update, context):
         return
 
     try:
         await update.message.chat.send_action(action="typing")
-        instructions = SYSTEM_PROMPT
-        if looks_like_medication_question(user_message):
-            instructions += "\n\n" + MEDICATION_PROMPT
 
         response = await client.responses.create(
             model=HEALTH_MODEL,
-            instructions=instructions,
+            instructions=SYSTEM_PROMPT,
             input=user_message,
             max_output_tokens=800,
             store=False,
         )
         answer = response.output_text or "Sorry, I couldn't generate a response. Please try again."
-
-        if looks_like_medication_question(user_message):
-            answer += (
-                "\n\n💊 If you'd like, I can also help you find a nearby pharmacy. "
-                "Send: “Find a pharmacy near me”."
-            )
 
         await update.message.reply_text(answer)
         await record_and_show_usage(update, context)
@@ -989,11 +1737,37 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             store=False,
         )
         answer = response.output_text or "I couldn't reliably analyze this image."
-        answer += (
-            "\n\n💊 If this is a medicine and your doctor/pharmacist has confirmed the exact name, strength and schedule, "
-            "Pulse AI can later help you set reminders for that confirmed schedule."
+
+        med_related = (
+            looks_like_medication_question(caption)
+            or looks_like_medication_question(answer)
         )
-        await update.message.reply_text("📷 Pulse AI Image Review\n\n" + answer)
+
+        if med_related:
+            arabic = contains_arabic(caption) or contains_arabic(answer)
+
+            if arabic:
+                safety_note = (
+                    "\n\n💊 تنبيه: لا تعتمد على شكل الحبة وحده. تأكد من اسم الدواء "
+                    "والتركيز من العبوة الأصلية أو الصيدلي/الطبيب قبل الاستخدام أو "
+                    "إعداد أي تذكير."
+                )
+            else:
+                safety_note = (
+                    "\n\n💊 Important: Do not rely on pill appearance alone. Confirm "
+                    "the exact medicine name and strength from the original package, "
+                    "pharmacist, or doctor before taking it or creating a reminder."
+                )
+
+            await update.message.reply_text(
+                "📷 Pulse AI Image Review\n\n" + answer + safety_note,
+                reply_markup=medication_action_keyboard(arabic),
+            )
+        else:
+            await update.message.reply_text(
+                "📷 Pulse AI Image Review\n\n" + answer
+            )
+
         await record_and_show_usage(update, context)
     except Exception as exc:
         logger.exception("Image error: %s", exc)
@@ -1038,8 +1812,10 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await perform_care_search(update, context, transcript_text)
             return
 
+        is_medication = looks_like_medication_question(transcript_text)
+
         instructions = SYSTEM_PROMPT
-        if looks_like_medication_question(transcript_text):
+        if is_medication:
             instructions += "\n\n" + MEDICATION_PROMPT
 
         response = await client.responses.create(
@@ -1049,13 +1825,33 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "The user sent the following voice note. Respond naturally in the same language:\n\n"
                 + transcript_text
             ),
-            max_output_tokens=800,
+            max_output_tokens=850,
             store=False,
         )
         answer = response.output_text or "I understood the voice note but couldn't generate a response."
-        if looks_like_medication_question(transcript_text):
-            answer += "\n\n💊 You can also ask me to find a pharmacy near you."
-        await update.message.reply_text("🎙 Pulse AI Voice Reply\n\n" + answer)
+
+        if is_medication:
+            arabic = contains_arabic(transcript_text)
+            if arabic:
+                footer = (
+                    "\n\n💊 هذه معلومات عامة وليست وصفة طبية. اتبع تعليمات العبوة "
+                    "وتأكد من الصيدلي أو الطبيب عند الشك."
+                )
+            else:
+                footer = (
+                    "\n\n💊 This is general information, not a prescription. Follow "
+                    "the medicine label and confirm with a pharmacist or doctor if unsure."
+                )
+
+            await update.message.reply_text(
+                "🎙 Pulse AI Voice Reply\n\n" + answer + footer,
+                reply_markup=medication_action_keyboard(arabic),
+            )
+        else:
+            await update.message.reply_text(
+                "🎙 Pulse AI Voice Reply\n\n" + answer
+            )
+
         await record_and_show_usage(update, context)
     except Exception as exc:
         logger.exception("Voice error: %s", exc)
@@ -1074,12 +1870,41 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def startup(application: Application):
     await db.init_db(DATABASE_URL)
+
+    reminder_task = asyncio.create_task(
+        medication_reminder_worker(application)
+    )
+    application.bot_data["medication_reminder_task"] = reminder_task
+
     logger.info("Pulse AI database connected.")
+    logger.info("Medication reminder worker started.")
 
 
 async def shutdown(application: Application):
-    await db.close_db()
-    logger.info("Pulse AI database connection closed.")
+    reminder_task = application.bot_data.get(
+        "medication_reminder_task"
+    )
+
+    if reminder_task:
+        reminder_task.cancel()
+
+        try:
+            await reminder_task
+        except asyncio.CancelledError:
+            pass
+
+    close_db_func = getattr(db, "close_db", None)
+
+    if close_db_func is not None:
+        await close_db_func()
+        logger.info("Pulse AI database connection closed.")
+    else:
+        logger.warning(
+            "database.db.close_db() was not found. "
+            "Skipping database shutdown cleanup."
+        )
+
+    logger.info("Medication reminder worker stopped.")
 
 
 # ==================================================
@@ -1097,6 +1922,82 @@ def main():
 
     private_only = filters.ChatType.PRIVATE
 
+    medication_conversation = ConversationHandler(
+        entry_points=[
+            CommandHandler(
+                "remindmedicine",
+                start_medication_reminder,
+                filters=private_only,
+            ),
+            CallbackQueryHandler(
+                start_medication_reminder,
+                pattern=r"^med_set_reminder$",
+            ),
+        ],
+        states={
+            MED_NAME: [
+                MessageHandler(
+                    filters.TEXT & ~filters.COMMAND,
+                    med_name_message,
+                )
+            ],
+            MED_STRENGTH: [
+                MessageHandler(
+                    filters.TEXT & ~filters.COMMAND,
+                    med_strength_message,
+                )
+            ],
+            MED_SOURCE: [
+                CallbackQueryHandler(
+                    med_source_callback,
+                    pattern=r"^med_source_(yes|no)$",
+                )
+            ],
+            MED_INTERVAL: [
+                CallbackQueryHandler(
+                    med_interval_callback,
+                    pattern=r"^med_interval_(6|8|12|24|custom)$",
+                )
+            ],
+            MED_INTERVAL_CUSTOM: [
+                MessageHandler(
+                    filters.TEXT & ~filters.COMMAND,
+                    med_interval_custom_message,
+                )
+            ],
+            MED_START: [
+                CallbackQueryHandler(
+                    med_start_callback,
+                    pattern=r"^med_start_(taken_now|due_now)$",
+                )
+            ],
+            MED_DURATION: [
+                CallbackQueryHandler(
+                    med_duration_callback,
+                    pattern=r"^med_duration_(1|3|5|7|14|30|open)$",
+                )
+            ],
+            MED_CONFIRM: [
+                CallbackQueryHandler(
+                    med_confirm_callback,
+                    pattern=r"^med_confirm_(yes|no)$",
+                )
+            ],
+        },
+        fallbacks=[
+            CommandHandler(
+                "cancel",
+                cancel_medication_reminder,
+            )
+        ],
+        allow_reentry=True,
+    )
+
+    # Medication reminder conversation must be registered before
+    # the generic text handler.
+    application.add_handler(medication_conversation)
+
+    # Private commands
     application.add_handler(CommandHandler("start", start, filters=private_only))
     application.add_handler(CommandHandler("help", help_command, filters=private_only))
     application.add_handler(CommandHandler("privacy", privacy, filters=private_only))
@@ -1108,15 +2009,43 @@ def main():
     application.add_handler(CommandHandler("findcare", findcare_command, filters=private_only))
     application.add_handler(CommandHandler("location", location_command, filters=private_only))
     application.add_handler(CommandHandler("forgetlocation", forget_location_command, filters=private_only))
+    application.add_handler(CommandHandler("reminders", reminders_command, filters=private_only))
 
+    # Medication action buttons
+    application.add_handler(
+        CallbackQueryHandler(
+            handle_med_find_pharmacy,
+            pattern=r"^med_find_pharmacy$",
+        )
+    )
+    application.add_handler(
+        CallbackQueryHandler(
+            handle_reminder_action,
+            pattern=r"^rem_(taken|snooze|stop):\d+$",
+        )
+    )
+
+    # Telegram Stars
     application.add_handler(PreCheckoutQueryHandler(precheckout_callback))
-    application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment_callback))
+    application.add_handler(
+        MessageHandler(
+            filters.SUCCESSFUL_PAYMENT,
+            successful_payment_callback,
+        )
+    )
+
+    # Media / location / normal messages
     application.add_handler(MessageHandler(filters.LOCATION, handle_location))
     application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     application.add_handler(MessageHandler(filters.VOICE, handle_voice))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    application.add_handler(
+        MessageHandler(
+            filters.TEXT & ~filters.COMMAND,
+            handle_message,
+        )
+    )
 
-    logger.info("Pulse AI database-enabled beta is running...")
+    logger.info("Pulse AI medication + pharmacy + reminder beta is running...")
     application.run_polling(drop_pending_updates=True)
 
 
