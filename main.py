@@ -262,27 +262,92 @@ Reply in the user's language.
 # CARE FINDER DETECTION
 # ==================================================
 
+# Broad healthcare words used to understand what kind of provider the user means.
 CARE_TERMS = [
+    # English providers / facilities
     "hospital", "clinic", "doctor", "dentist", "pediatrician",
     "paediatrician", "pharmacy", "medical center", "medical centre",
     "health center", "health centre", "urgent care", "emergency room",
-    "specialist", "dermatologist", "cardiologist", "orthopedic",
-    "orthopaedic", "ent", "ophthalmologist", "gynecologist",
-    "gynaecologist", "psychiatrist", "psychologist", "physiotherapist",
-    "physio", "surgeon", "مستشفى", "مستشفيات", "عيادة", "عيادات",
-    "طبيب", "طبيبة", "دكتور", "دكتورة", "أسنان", "اسنان", "صيدلية",
-    "صيدليات", "مركز صحي", "مركز طبي", "طوارئ", "أخصائي", "اخصائي",
-    "اختصاصي", "أطفال", "اطفال", "جلدية", "قلب", "عظام", "أنف",
-    "انف", "أذن", "اذن", "حنجرة", "عيون", "نساء", "ولادة", "نفسي",
-    "علاج طبيعي",
+    "specialist", "dermatologist", "cardiologist", "orthodontist",
+    "orthopedic", "orthopaedic", "ent", "ophthalmologist",
+    "gynecologist", "gynaecologist", "psychiatrist", "psychologist",
+    "physiotherapist", "physio", "surgeon",
+
+    # Arabic providers / facilities
+    "مستشفى", "مستشفيات", "عيادة", "عيادات", "طبيب", "طبيبة",
+    "دكتور", "دكتورة", "صيدلية", "صيدليات", "مركز صحي", "مركز طبي",
+    "طوارئ", "أخصائي", "اخصائي", "اختصاصي", "طبيب أطفال",
+    "طبيب اطفال", "دكتور أطفال", "دكتور اطفال", "طبيب أسنان",
+    "طبيب اسنان", "دكتور أسنان", "دكتور اسنان", "تقويم أسنان",
+    "تقويم اسنان", "طبيب تقويم", "دكتور تقويم",
+
+    # Specialty words (not enough by themselves to trigger Care Finder)
+    "أطفال", "اطفال", "جلدية", "قلب", "عظام", "أنف", "انف",
+    "أذن", "اذن", "حنجرة", "عيون", "نساء", "ولادة", "نفسي",
+    "علاج طبيعي", "أسنان", "اسنان",
 ]
 
+# Strong words/phrases showing that the user is actually asking Pulse to SEARCH
+# for a provider/place. These are intentionally more specific than generic
+# symptom words.
 CARE_SEARCH_TERMS = [
-    "find", "looking for", "i need", "need a", "need an", "nearest",
-    "near me", "nearby", "closest", "recommend", "where is", "open now",
-    "around me", "search for", "ابحث", "أبحث", "ابي", "أبي", "احتاج",
-    "أحتاج", "اريد", "أريد", "اقرب", "أقرب", "قريب مني", "بالقرب مني",
-    "وين", "رشح", "أفضل", "افضل", "دور لي",
+    # English
+    "find", "find me", "looking for", "nearest", "near me", "nearby",
+    "closest", "recommend a doctor", "recommend a clinic",
+    "recommend a hospital", "recommend a dentist", "recommend a pharmacy",
+    "where is", "open now", "around me", "search for",
+
+    # Arabic
+    "ابحث", "أبحث", "دور لي", "دورلي", "أقرب", "اقرب",
+    "قريب مني", "بالقرب مني", "وين أقرب", "وين اقرب",
+    "رشح لي", "رشحلي", "أفضل دكتور", "افضل دكتور",
+    "أفضل طبيب", "افضل طبيب", "أفضل عيادة", "افضل عيادة",
+    "أفضل مستشفى", "افضل مستشفى", "أفضل صيدلية", "افضل صيدلية",
+    "أبي دكتور", "ابي دكتور", "أريد دكتور", "اريد دكتور",
+    "أحتاج دكتور", "احتاج دكتور", "أبي طبيب", "ابي طبيب",
+    "أريد طبيب", "اريد طبيب", "أحتاج طبيب", "احتاج طبيب",
+    "أبي مستشفى", "ابي مستشفى", "أريد مستشفى", "اريد مستشفى",
+    "أحتاج مستشفى", "احتاج مستشفى", "أبي عيادة", "ابي عيادة",
+    "أريد عيادة", "اريد عيادة", "أحتاج عيادة", "احتاج عيادة",
+    "أبي صيدلية", "ابي صيدلية", "أريد صيدلية", "اريد صيدلية",
+    "أحتاج صيدلية", "احتاج صيدلية",
+]
+
+# Provider/facility words. A specialty word such as "أنف" or "قلب" alone is
+# NOT treated as a provider search.
+CARE_PROVIDER_TERMS = [
+    # English
+    "hospital", "clinic", "doctor", "dentist", "pediatrician",
+    "paediatrician", "pharmacy", "medical center", "medical centre",
+    "health center", "health centre", "urgent care", "emergency room",
+    "specialist", "dermatologist", "cardiologist", "orthodontist",
+    "orthopedic", "orthopaedic", "ent", "ophthalmologist",
+    "gynecologist", "gynaecologist", "psychiatrist", "psychologist",
+    "physiotherapist", "physio", "surgeon",
+
+    # Arabic
+    "مستشفى", "مستشفيات", "عيادة", "عيادات", "طبيب", "طبيبة",
+    "دكتور", "دكتورة", "صيدلية", "صيدليات", "مركز صحي", "مركز طبي",
+    "طوارئ", "أخصائي", "اخصائي", "اختصاصي",
+    "طبيب أطفال", "طبيب اطفال", "دكتور أطفال", "دكتور اطفال",
+    "طبيب أسنان", "طبيب اسنان", "دكتور أسنان", "دكتور اسنان",
+    "تقويم أسنان", "تقويم اسنان", "طبيب تقويم", "دكتور تقويم",
+]
+
+# Common symptom-language markers. These help prevent sentences such as
+# "عندي ألم في الأذن" from being mistaken for a search for an ENT clinic.
+SYMPTOM_MARKERS = [
+    # English
+    "i have", "i've got", "pain in", "hurts", "ache",
+    "runny nose", "fever", "cough", "sore throat", "fatigue", "tired",
+    "dizzy", "dizziness", "headache", "nausea", "vomiting", "rash",
+    "swelling", "bleeding", "congestion", "symptom", "symptoms",
+
+    # Arabic
+    "عندي", "لدي", "أشعر", "اشعر", "أحس", "احس", "أعاني", "اعاني",
+    "ألم", "الم", "وجع", "يوجعني", "يؤلمني", "سيلان", "حرارة", "حمى",
+    "كحة", "سعال", "تعب", "إرهاق", "ارهاق", "دوخة", "صداع", "غثيان",
+    "استفراغ", "قيء", "طفح", "تورم", "نزيف", "احتقان", "التهاب",
 ]
 
 NEAR_ME_TERMS = [
@@ -311,16 +376,51 @@ def contains_arabic(text: str) -> bool:
     return bool(re.search(r"[\u0600-\u06FF]", text or ""))
 
 
+def _contains_any(text: str, terms) -> bool:
+    lowered = (text or "").lower()
+    return any(term.lower() in lowered for term in terms)
+
+
 def looks_like_care_search(text: str) -> bool:
+    """
+    Route to Care Finder only when the user clearly asks to find a provider/place.
+
+    Examples:
+    - "عندي سيلان في الأنف" -> False
+    - "عندي ألم في الأذن" -> False
+    - "أبي دكتور أنف وأذن في الوكرة" -> True
+    - "أفضل دكتور تقويم اسنان في الوكرة" -> True
+    - "Dentist in Doha" -> True
+    - "Find a pediatrician near me" -> True
+    """
     if not text:
         return False
-    lowered = text.lower()
-    has_care = any(term.lower() in lowered for term in CARE_TERMS)
-    if not has_care:
+
+    has_provider = _contains_any(text, CARE_PROVIDER_TERMS)
+    has_care_word = _contains_any(text, CARE_TERMS)
+    has_search_intent = _contains_any(text, CARE_SEARCH_TERMS)
+    has_symptom_language = _contains_any(text, SYMPTOM_MARKERS)
+
+    # Strong explicit search intent + a healthcare/provider term.
+    if has_search_intent and has_care_word:
+        return True
+
+    # "Dentist in Doha" / "طبيب أطفال في الدوحة": require an actual
+    # provider/facility term, not merely a body part or symptom specialty word.
+    has_named_location_pattern = bool(
+        re.search(r"\b(?:in|near)\s+[A-Za-z]", text, re.IGNORECASE)
+        or " في " in text
+    )
+
+    if has_provider and has_named_location_pattern and not has_symptom_language:
+        return True
+
+    # Symptom descriptions stay with Health AI unless explicit search intent
+    # was detected above.
+    if has_symptom_language:
         return False
-    has_search = any(term.lower() in lowered for term in CARE_SEARCH_TERMS)
-    has_location = " in " in lowered or " في " in text
-    return has_search or has_location
+
+    return False
 
 
 def asks_near_me(text: str) -> bool:
@@ -342,6 +442,7 @@ def looks_like_medication_question(text: str) -> bool:
 
 
 def clean_care_query(text: str) -> str:
+
     query = text.strip()
     replacements = [
         "find me", "find a", "find an", "i need a", "i need an", "i need",
@@ -1652,6 +1753,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
     if looks_like_care_search(user_message):
+        logger.info(
+            "Routing to Care Finder | user=%s | text=%s",
+            update.effective_user.id if update.effective_user else "unknown",
+            user_message[:160],
+        )
         await perform_care_search(update, context, user_message)
         return
 
@@ -1893,18 +1999,10 @@ async def shutdown(application: Application):
         except asyncio.CancelledError:
             pass
 
-    close_db_func = getattr(db, "close_db", None)
-
-    if close_db_func is not None:
-        await close_db_func()
-        logger.info("Pulse AI database connection closed.")
-    else:
-        logger.warning(
-            "database.db.close_db() was not found. "
-            "Skipping database shutdown cleanup."
-        )
+    await db.close_db()
 
     logger.info("Medication reminder worker stopped.")
+    logger.info("Pulse AI database connection closed.")
 
 
 # ==================================================
