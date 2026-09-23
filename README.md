@@ -1,1 +1,0 @@
-# pulse-ai-bot

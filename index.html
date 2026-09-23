@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#010403" />
+  <meta name="description" content="404 — Identity Not Found. No name. No face. No identity." />
+  <meta property="og:title" content="404 — Identity Not Found" />
+  <meta property="og:description" content="No name. No face. No identity." />
+  <meta property="og:image" content="assets/404-matrix-style.png" />
+  <title>404 // IDENTITY NOT FOUND</title>
+  <style>
+    :root{
+      --bg:#030705;
+      --bg2:#06100a;
+      --panel:rgba(3,10,7,.75);
+      --panel2:rgba(8,18,12,.82);
+      --line:rgba(80,255,130,.18);
+      --line2:rgba(190,255,205,.08);
+      --green:#4bff7d;
+      --green-soft:#9cffb7;
+      --text:#effff4;
+      --muted:#aac7b1;
+      --shadow:0 0 40px rgba(75,255,125,.14), 0 0 120px rgba(75,255,125,.08);
+      --max:1240px;
+      --radius:24px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;background:var(--bg)}
+    body{
+      margin:0; background:
+      radial-gradient(circle at top, rgba(75,255,125,.08), transparent 28%),
+      linear-gradient(180deg,#020504 0%, #030705 32%, #020504 100%);
+      color:var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      overflow-x:hidden;
+    }
+    a{color:inherit;text-decoration:none}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+    .noise,.scanlines,.grid,.vignette,.glow-top{position:fixed;inset:0;pointer-events:none}
+    .grid{z-index:0;background:
+      linear-gradient(rgba(75,255,125,.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(75,255,125,.045) 1px, transparent 1px);
+      background-size: 54px 54px;
+      mask-image:linear-gradient(180deg, rgba(0,0,0,.32), rgba(0,0,0,.9));
+      opacity:.24;
+    }
+    .scanlines{z-index:1;background:repeating-linear-gradient(180deg,rgba(255,255,255,.03) 0 1px, transparent 1px 4px);opacity:.16;mix-blend-mode:screen}
+    .noise{z-index:2;opacity:.06;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.65'/%3E%3C/svg%3E")}
+    .vignette{z-index:3;background:radial-gradient(circle at center, transparent 25%, rgba(0,0,0,.2) 58%, rgba(0,0,0,.72) 100%)}
+    .glow-top{z-index:4;background:radial-gradient(circle at 50% 0%, rgba(75,255,125,.22), transparent 35%)}
+    #matrixCanvas{position:fixed;inset:0;z-index:5;opacity:.38;pointer-events:none}
+    .wrap{position:relative;z-index:6}
+    .nav{
+      position:sticky; top:0; z-index:40;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(1,5,3,.92), rgba(1,5,3,.55));
+      backdrop-filter: blur(12px);
+    }
+    .navin{max-width:var(--max); margin:auto; height:74px; padding:0 24px; display:flex; align-items:center; justify-content:space-between; gap:20px}
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      text-transform:uppercase; letter-spacing:.22em; font-size:14px; font-weight:800;
+    }
+    .brand .mark{
+      width:38px; height:38px; display:grid; place-items:center; border:1px solid var(--line);
+      border-radius:12px; background:rgba(75,255,125,.06); box-shadow:var(--shadow); color:var(--green);
+      font-size:15px; font-weight:900;
+    }
+    .brand .text{color:var(--green-soft)}
+    .navlinks{display:flex; align-items:center; gap:28px; font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:#c6ddd0}
+    .navlinks a{opacity:.9; transition:.18s ease}
+    .navlinks a:hover{color:var(--green); opacity:1; text-shadow:0 0 16px rgba(75,255,125,.4)}
+    .navActions{display:flex; align-items:center; gap:10px}
+    .chip{display:inline-flex; align-items:center; justify-content:center; min-width:46px; height:38px; padding:0 12px; border:1px solid var(--line); border-radius:12px; background:rgba(75,255,125,.05); color:var(--green-soft); font-size:11px; letter-spacing:.18em; text-transform:uppercase; font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; transition:.18s ease}
+    .chip:hover{border-color:rgba(75,255,125,.55); color:var(--green); box-shadow:0 0 20px rgba(75,255,125,.16)}
+
+    .hero{min-height:100svh; padding:32px 24px 64px; display:flex; align-items:center}
+    .heroFrame{
+      max-width:var(--max); width:100%; margin:auto; position:relative;
+      border:1px solid var(--line); border-radius:32px; overflow:hidden;
+      background:linear-gradient(180deg, rgba(3,10,7,.75), rgba(2,8,5,.88)); box-shadow:var(--shadow);
+      isolation:isolate;
+    }
+    .heroFrame::before{
+      content:""; position:absolute; inset:0;
+      background:
+        linear-gradient(90deg, rgba(2,6,4,.96) 0%, rgba(2,6,4,.65) 26%, rgba(2,6,4,.12) 50%, rgba(2,6,4,.65) 75%, rgba(2,6,4,.96) 100%),
+        linear-gradient(180deg, rgba(2,6,4,.16), rgba(2,6,4,.28) 60%, rgba(1,3,2,.94)),
+        url('assets/404-matrix-style.png') center/cover no-repeat;
+      transform:scale(1.02);
+      z-index:-3;
+      filter:saturate(1.05) contrast(1.03);
+    }
+    .heroFrame::after{
+      content:""; position:absolute; inset:0;
+      background:radial-gradient(circle at 50% 38%, rgba(75,255,125,.14), transparent 30%);
+      z-index:-2;
+    }
+    .heroInner{padding:clamp(26px,4vw,44px); min-height:calc(100svh - 170px); display:grid; grid-template-columns:1.15fr .85fr; gap:28px; align-items:end}
+    .heroLeft{max-width:760px}
+    .statusPill{
+      display:inline-flex; align-items:center; gap:10px; padding:10px 14px;
+      border:1px solid var(--line); border-radius:999px; background:rgba(0,0,0,.38);
+      font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--green-soft)
+    }
+    .statusPill .dot{width:8px; height:8px; border-radius:999px; background:var(--green); box-shadow:0 0 16px var(--green); animation:pulse 1.4s infinite}
+    @keyframes pulse{50%{opacity:.32; transform:scale(.7)}}
+    .posterTitle{margin:24px 0 0; line-height:.85}
+    .glitch404{
+      font-size:clamp(120px, 19vw, 270px); font-weight:1000; letter-spacing:-.08em; display:block; position:relative;
+      text-shadow:0 0 28px rgba(75,255,125,.28), 0 0 80px rgba(75,255,125,.08);
+    }
+    .glitch404::before,.glitch404::after{content:attr(data-text); position:absolute; inset:0; pointer-events:none}
+    .glitch404::before{color:var(--green); opacity:.48; transform:translate(6px,0); clip-path:polygon(0 10%,100% 10%,100% 26%,0 26%); animation:glitchA 3.2s infinite steps(2,end)}
+    .glitch404::after{color:#f6fff8; opacity:.16; transform:translate(-6px,0); clip-path:polygon(0 72%,100% 72%,100% 86%,0 86%); animation:glitchB 2.3s infinite steps(2,end)}
+    @keyframes glitchA{0%,92%,100%{transform:translate(0,0)}94%{transform:translate(12px,-3px)}96%{transform:translate(-8px,1px)}}
+    @keyframes glitchB{0%,88%,100%{transform:translate(0,0)}90%{transform:translate(-12px,2px)}92%{transform:translate(8px,-1px)}}
+    .subtitle{display:block; margin-top:14px; font-size:clamp(24px, 2.3vw, 44px); letter-spacing:.28em; text-transform:uppercase}
+    .tagline{margin:28px 0 0; max-width:760px; color:#ebf6ef; font-size:clamp(13px,1.25vw,18px); letter-spacing:.36em; text-transform:uppercase}
+    .heroCopy{margin:26px 0 0; max-width:660px; color:var(--muted); line-height:1.8; font-size:15px}
+    .socialRow{display:flex; gap:10px; flex-wrap:wrap; margin-top:18px}
+    .socialBtn{display:inline-flex; align-items:center; justify-content:center; min-width:92px; height:42px; padding:0 16px; border:1px solid var(--line); border-radius:13px; background:rgba(0,0,0,.28); color:var(--green-soft); font-size:12px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; transition:.18s ease; cursor:pointer; font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+    .socialBtn:hover{border-color:var(--green); color:var(--green); box-shadow:0 0 22px rgba(75,255,125,.14)}
+    .socialBtn.copy{min-width:150px}
+    .caText{display:block; margin-top:10px; color:#8fb499; font-size:11px; letter-spacing:.16em; text-transform:uppercase}
+    .ctaRow{display:flex; gap:14px; flex-wrap:wrap; margin-top:32px}
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; min-width:188px; padding:14px 18px;
+      border:1px solid var(--green); border-radius:14px; background:rgba(5,14,9,.62);
+      color:var(--green); text-transform:uppercase; letter-spacing:.18em; font-size:12px; font-weight:700;
+      box-shadow: inset 0 0 20px rgba(75,255,125,.05); transition:.18s ease;
+    }
+    .btn:hover{background:var(--green); color:#001c0a; transform:translateY(-1px); box-shadow:0 0 26px rgba(75,255,125,.26)}
+    .btn.secondary{border-color:rgba(255,255,255,.2); color:#edf8f0; background:rgba(0,0,0,.32)}
+    .btn.secondary:hover{border-color:var(--green); background:rgba(5,14,9,.62); color:var(--green)}
+
+    .heroRight{display:flex; align-items:flex-end; justify-content:flex-end}
+    .posterCard{
+      width:min(430px, 100%); border:1px solid var(--line); border-radius:22px;
+      background:linear-gradient(180deg, rgba(2,10,6,.62), rgba(1,4,3,.88)); overflow:hidden;
+      box-shadow: var(--shadow);
+    }
+    .posterTop{display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line); text-transform:uppercase; letter-spacing:.18em; font-size:11px; color:var(--green-soft)}
+    .posterImage{aspect-ratio:9/12; background:url('assets/404-matrix-style.png') center/cover no-repeat; position:relative}
+    .posterImage::before{content:""; position:absolute; inset:0; background:linear-gradient(180deg,rgba(3,8,6,0) 10%,rgba(3,8,6,.24) 60%,rgba(3,8,6,.92) 100%)}
+    .posterOverlay{position:absolute; left:0; right:0; bottom:0; padding:20px 18px 18px}
+    .mini404{font-size:56px; font-weight:1000; letter-spacing:-.06em; line-height:.88}
+    .miniSub{font-size:13px; letter-spacing:.26em; text-transform:uppercase; margin-top:8px}
+    .miniTag{font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--muted); margin-top:16px}
+
+    .codeStrip{border-top:1px solid var(--line); border-bottom:1px solid var(--line); background:rgba(2,8,5,.72); overflow:hidden}
+    .codeTrack{display:inline-flex; gap:34px; min-width:200%; white-space:nowrap; padding:14px 0; font-size:13px; color:var(--green); letter-spacing:.28em; text-transform:uppercase; animation:marquee 18s linear infinite}
+    @keyframes marquee{to{transform:translateX(-50%)}}
+
+    section{padding:92px 24px}
+    .container{max-width:var(--max); margin:auto}
+    .sectionLabel{font-size:11px; text-transform:uppercase; letter-spacing:.26em; color:var(--green); margin-bottom:20px}
+    .sectionTitle{font-size:clamp(34px, 6vw, 78px); line-height:.92; margin:0 0 24px; letter-spacing:-.05em}
+    .muted{color:var(--muted)}
+
+    .loreGrid{display:grid; grid-template-columns:1fr 1fr; gap:26px; align-items:stretch}
+    .panel{
+      border:1px solid var(--line); border-radius:var(--radius); background:linear-gradient(180deg, rgba(4,11,8,.76), rgba(2,6,4,.92));
+      box-shadow: var(--shadow);
+    }
+    .manifesto{padding:30px; display:flex; flex-direction:column; justify-content:center}
+    .manifesto p{font-size:clamp(22px,2.6vw,38px); line-height:1.34; margin:0 0 16px}
+    .manifesto p strong{color:var(--green)}
+    .manifesto .small{font-size:14px; line-height:1.8; color:var(--muted); margin-top:10px}
+
+    .terminal .top{display:flex; align-items:center; gap:8px; padding:14px 18px; border-bottom:1px solid var(--line); color:var(--green-soft); font-size:11px; letter-spacing:.18em; text-transform:uppercase}
+    .terminal .circle{width:9px; height:9px; border-radius:50%; background:rgba(130,180,145,.35)}
+    .terminal .circle.live{background:var(--green); box-shadow:0 0 12px rgba(75,255,125,.55)}
+    .terminal .body{padding:20px 22px 24px; min-height:328px; font-size:14px; line-height:1.92; color:#d7e8dc}
+    .terminal .line-green{color:var(--green)}
+    .blink{display:inline-block; width:8px; height:16px; background:var(--green); vertical-align:-2px; animation:blink 1s steps(1) infinite}
+    @keyframes blink{50%{opacity:0}}
+
+    .signalGrid{display:grid; grid-template-columns:1.12fr .88fr; gap:26px}
+    .bigBinary{padding:30px; font-size:clamp(28px, 5.4vw, 78px); line-height:1.02; word-break:break-word; letter-spacing:.08em; color:transparent; -webkit-text-stroke:1px rgba(75,255,125,.55); text-shadow:0 0 16px rgba(75,255,125,.1)}
+    .dataPanel{padding:28px 28px 32px}
+    .dataPanel .kicker{font-size:12px; letter-spacing:.22em; color:var(--green); text-transform:uppercase; margin-bottom:14px}
+    .dataPanel h3{margin:0; font-size:clamp(26px,3vw,44px); line-height:1}
+    .dataPanel p{margin:16px 0 0; color:var(--muted); line-height:1.8; font-size:15px}
+    .dataStack{display:grid; gap:10px; margin-top:24px}
+    .dataRow{display:flex; justify-content:space-between; gap:20px; padding:12px 0; border-top:1px solid var(--line2); font-size:13px; text-transform:uppercase; letter-spacing:.18em}
+    .dataRow span:last-child{color:var(--green-soft)}
+
+    .footer{padding:40px 24px 60px; border-top:1px solid var(--line)}
+    .footerIn{max-width:var(--max); margin:auto; display:flex; justify-content:space-between; gap:18px; flex-wrap:wrap; color:#95b69d; font-size:11px; text-transform:uppercase; letter-spacing:.2em}
+
+    @media (max-width:1020px){
+      .heroInner,.loreGrid,.signalGrid{grid-template-columns:1fr}
+      .heroRight{justify-content:flex-start}
+      .posterCard{max-width:560px}
+    }
+    @media (max-width:760px){
+      .navlinks{display:none}
+      .navActions{gap:8px}
+      .chip{min-width:40px; height:34px; padding:0 10px; font-size:10px}
+      .navin{padding:0 18px; height:68px}
+      .hero,.footer,section{padding-left:18px; padding-right:18px}
+      .heroFrame{border-radius:24px}
+      .heroInner{padding:22px; min-height:calc(100svh - 150px)}
+      .tagline{letter-spacing:.24em; line-height:1.8}
+      .glitch404{font-size:clamp(96px,30vw,180px)}
+      .subtitle{font-size:clamp(22px,6vw,34px); letter-spacing:.18em}
+      .btn{width:100%}
+      .socialBtn{flex:1 1 calc(33.333% - 8px); min-width:86px}
+      .manifesto,.bigBinary,.dataPanel{padding:22px}
+      .terminal .body{padding:18px}
+    }
+    @media (prefers-reduced-motion:reduce){
+      html{scroll-behavior:auto}
+      *{animation:none !important}
+      #matrixCanvas{display:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="grid" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="glow-top" aria-hidden="true"></div>
+  <canvas id="matrixCanvas" aria-hidden="true"></canvas>
+
+  <div class="wrap">
+    <header class="nav">
+      <div class="navin">
+        <a class="brand" href="#top"><span class="mark mono">404</span><span class="text">Identity Not Found</span></a>
+        <nav class="navlinks mono">
+          <a href="#lore">Lore</a>
+          <a href="#signal">Signal</a>
+          <a href="#terminal">Terminal</a>
+        </nav>
+        <div class="navActions">
+          <a class="chip" id="navX" href="#">X</a>
+          <a class="chip" id="navTG" href="#">TG</a>
+          <button class="chip" id="navCA" type="button">CA</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="heroFrame">
+          <div class="heroInner">
+            <div class="heroLeft">
+              <div class="statusPill mono"><span class="dot"></span> SYSTEM STATUS // ACTIVE</div>
+              <div class="posterTitle">
+                <span class="glitch404 mono" data-text="404">404</span>
+                <span class="subtitle mono">IDENTITY NOT FOUND</span>
+              </div>
+              <div class="tagline mono">NO NAME. NO FACE. NO IDENTITY.</div>
+              <p class="heroCopy mono">A signal without a profile. A presence without a face. A system error that became a symbol. The network searched for a human identity and found only <strong>404</strong>.</p>
+              <div class="socialRow">
+                <a class="socialBtn" id="heroX" href="#">X</a>
+                <a class="socialBtn" id="heroTG" href="#">TG</a>
+                <button class="socialBtn copy" id="heroCA" type="button">CA</button>
+              </div>
+              <span class="caText mono" id="caLabel">CONTRACT ADDRESS // COMING SOON</span>
+              <div class="ctaRow mono">
+                <a href="#lore" class="btn">ENTER THE VOID</a>
+                <a href="#terminal" class="btn secondary">RUN IDENTITY SCAN</a>
+              </div>
+            </div>
+            <div class="heroRight">
+              <div class="posterCard">
+                <div class="posterTop mono"><span>VISUAL SIGNAL</span><span>ONLINE</span></div>
+                <div class="posterImage">
+                  <div class="posterOverlay mono">
+                    <div class="mini404">404</div>
+                    <div class="miniSub">Identity Not Found</div>
+                    <div class="miniTag">No Name. No Face. No Identity.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="codeStrip mono" aria-hidden="true">
+        <div class="codeTrack">
+          <span>00101000101001010010101101010101010101010</span>
+          <span>//</span>
+          <span>404</span>
+          <span>//</span>
+          <span>IDENTITY NOT FOUND</span>
+          <span>//</span>
+          <span>01001001100100101001010010101001010100101</span>
+          <span>//</span>
+          <span>NO NAME. NO FACE. NO IDENTITY.</span>
+          <span>//</span>
+          <span>00101000101001010010101101010101010101010</span>
+          <span>//</span>
+          <span>404</span>
+          <span>//</span>
+          <span>IDENTITY NOT FOUND</span>
+          <span>//</span>
+          <span>01001001100100101001010010101001010100101</span>
+          <span>//</span>
+          <span>NO NAME. NO FACE. NO IDENTITY.</span>
+        </div>
+      </div>
+
+      <section id="lore">
+        <div class="container loreGrid">
+          <article class="panel manifesto">
+            <div class="sectionLabel mono">// LORE</div>
+            <h2 class="sectionTitle">THE SYSTEM<br>LOOKED FOR A PERSON.</h2>
+            <p class="mono">It searched for a <strong>name</strong>.<br>It searched for a <strong>face</strong>.<br>It searched for an <strong>identity</strong>.</p>
+            <p class="mono">It found only <strong>404</strong>.</p>
+            <div class="small mono">Not a profile. Not a biography. Not a person to classify. Just the signal that remains after every label disappears.</div>
+          </article>
+
+          <article class="panel terminal" id="terminal">
+            <div class="top mono"><span class="circle live"></span><span class="circle"></span><span class="circle"></span> identity_scan.exe</div>
+            <div class="body mono" id="terminalOutput" aria-live="polite"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="signal">
+        <div class="container signalGrid">
+          <article class="panel bigBinary mono">00101000101001010010101101010101010101010</article>
+          <article class="panel dataPanel">
+            <div class="kicker mono">// SIGNAL ANALYSIS</div>
+            <h3>THE ERROR BECAME THE BRAND.</h3>
+            <p class="mono">The language of the website follows the artwork: a hooded anonymous figure, black-and-neon green contrast, animated 0/1 data rain, and a cinematic Matrix-inspired atmosphere.</p>
+            <div class="dataStack mono">
+              <div class="dataRow"><span>Status</span><span>404</span></div>
+              <div class="dataRow"><span>Identity</span><span>NOT FOUND</span></div>
+              <div class="dataRow"><span>Name</span><span>NULL</span></div>
+              <div class="dataRow"><span>Face</span><span>NULL</span></div>
+              <div class="dataRow"><span>Signal</span><span>ACTIVE</span></div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footerIn mono">
+        <span>404 // Identity Not Found</span>
+        <span>No Name. No Face. No Identity.</span>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const SITE_CONFIG = {
+      xUrl: '#',
+      telegramUrl: '#',
+      contractAddress: 'COMING SOON'
+    };
+
+    function wireLinks(){
+      const xTargets = ['navX','heroX'];
+      const tgTargets = ['navTG','heroTG'];
+      xTargets.forEach(id => { const el = document.getElementById(id); if(el && SITE_CONFIG.xUrl) el.href = SITE_CONFIG.xUrl; });
+      tgTargets.forEach(id => { const el = document.getElementById(id); if(el && SITE_CONFIG.telegramUrl) el.href = SITE_CONFIG.telegramUrl; });
+      const caText = document.getElementById('caLabel');
+      if(caText) caText.textContent = 'CONTRACT ADDRESS // ' + SITE_CONFIG.contractAddress;
+      const copyTargets = ['navCA','heroCA'];
+      copyTargets.forEach(id => {
+        const el = document.getElementById(id);
+        if(!el) return;
+        el.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(SITE_CONFIG.contractAddress);
+            const old = el.textContent;
+            el.textContent = 'COPIED';
+            setTimeout(()=> el.textContent = 'CA', 1200);
+          } catch(e){
+            el.textContent = 'CA';
+          }
+        });
+      });
+    }
+    wireLinks();
+
+    const terminalOutput = document.getElementById('terminalOutput');
+    const lines = [
+      '> booting identity_scan.exe',
+      '> loading biometric index........................ [online]',
+      '> searching name................................ [not found]',
+      '> searching face................................ [not found]',
+      '> searching identity............................ [not found]',
+      '> checking signal integrity..................... [active]',
+      '',
+      'STATUS: 404',
+      'NO NAME.',
+      'NO FACE.',
+      'NO IDENTITY.',
+      '',
+      '> signal remains online <span class="blink"></span>'
+    ];
+
+    let started = false;
+    function typeTerminal(){
+      if(started) return; started = true;
+      lines.forEach((text, i) => {
+        setTimeout(() => {
+          const div = document.createElement('div');
+          if(text === '') div.innerHTML = '&nbsp;';
+          else div.innerHTML = text
+            .replace('[online]', '<span class="line-green">[online]</span>')
+            .replace('[active]', '<span class="line-green">[active]</span>')
+            .replace('[not found]', '<span class="line-green">[not found]</span>');
+          terminalOutput.appendChild(div);
+        }, i * 220);
+      });
+    }
+    const observer = new IntersectionObserver((entries)=>{
+      if(entries[0].isIntersecting){ typeTerminal(); observer.disconnect(); }
+    },{threshold:.35});
+    observer.observe(terminalOutput);
+
+    // Matrix rain with 0/1 motion
+    const canvas = document.getElementById('matrixCanvas');
+    const ctx = canvas.getContext('2d');
+    let columns = 0;
+    let drops = [];
+    let fontSize = 17;
+
+    function fitCanvas(){
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = innerWidth * dpr;
+      canvas.height = innerHeight * dpr;
+      canvas.style.width = innerWidth + 'px';
+      canvas.style.height = innerHeight + 'px';
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      columns = Math.floor(innerWidth / fontSize);
+      drops = Array.from({length: columns}, () => Math.floor(Math.random() * -80));
+    }
+
+    function drawMatrix(){
+      ctx.fillStyle = 'rgba(1,6,4,0.12)';
+      ctx.fillRect(0,0,innerWidth,innerHeight);
+      ctx.font = '700 ' + fontSize + 'px ui-monospace, monospace';
+      for(let i=0;i<drops.length;i++){
+        const char = Math.random() > 0.5 ? '0' : '1';
+        const x = i * fontSize;
+        const y = drops[i] * fontSize;
+        ctx.fillStyle = 'rgba(75,255,125,0.96)';
+        ctx.shadowColor = 'rgba(75,255,125,0.45)';
+        ctx.shadowBlur = 8;
+        ctx.fillText(char, x, y);
+        ctx.shadowBlur = 0;
+
+        if (y > innerHeight && Math.random() > 0.975) {
+          drops[i] = Math.floor(Math.random() * -20);
+        }
+        drops[i] += 0.55 + Math.random() * 0.65;
+      }
+      requestAnimationFrame(drawMatrix);
+    }
+
+    fitCanvas();
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      drawMatrix();
+    }
+    addEventListener('resize', fitCanvas);
+  </script>
+</body>
+</html>
