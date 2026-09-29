@@ -2,173 +2,104 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#08090d">
-<meta name="description" content="404 — Identity Not Found. No name. No face. No identity. Solana edition.">
-<meta property="og:title" content="404 // Identity Not Found">
-<meta property="og:description" content="A signal without a profile. A presence without a face. Solana edition.">
-<meta property="og:image" content="assets/404-solana.jpg">
-<title>404 // IDENTITY NOT FOUND — SOLANA EDITION</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2308090d'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-family='monospace' font-size='27' font-weight='bold' fill='%2314f195'%3E404%3C/text%3E%3C/svg%3E">
-<style>
-:root{--bg:#08090d;--text:#f5f4f9;--muted:#a5a4b1;--line:#ffffff17;--mint:#14f195;--purple:#9945ff;--lilac:#c8a7ff;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--max:1320px}
-*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:95px;background:var(--bg)}
-body{margin:0;color:var(--text);font-family:Arial,Helvetica,sans-serif;background:var(--bg);-webkit-font-smoothing:antialiased}
-a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;cursor:pointer}button:disabled{cursor:default}button,a{-webkit-tap-highlight-color:transparent}[hidden]{display:none!important}
-::selection{color:var(--bg);background:var(--mint)}:focus-visible{outline:2px solid var(--mint);outline-offset:6px}
-.container{width:min(var(--max),calc(100% - 96px));margin-inline:auto}
-.skip{position:fixed;top:-90px;left:20px;z-index:100;padding:15px;background:var(--mint);color:#08090d}.skip:focus{top:12px}
-.nav{height:86px;position:relative;z-index:10;border-bottom:1px solid var(--line)}
-.nav-inner{height:100%;display:flex;align-items:center;justify-content:space-between;gap:24px}
-.brand{display:flex;align-items:center;gap:14px;flex-shrink:0}.brand-mark{font-size:30px;letter-spacing:-3px;font-weight:900}.brand-divider{width:1px;height:25px;background:#ffffff2e}.brand-name{font:9px/1.65 var(--mono);letter-spacing:1.6px;color:#c5c4d0}
-.nav-links{display:flex;gap:32px;font:11px var(--mono);letter-spacing:1px;color:var(--muted)}.nav-links a:hover{color:var(--mint)}
-.edition{display:flex;align-items:center;gap:10px;font:10px var(--mono);letter-spacing:1.3px;white-space:nowrap}.sol-symbol{display:flex;flex-direction:column;gap:3px;width:19px;transform:skew(-24deg)}.sol-symbol i{height:4px;background:linear-gradient(110deg,var(--mint),var(--purple))}.sol-symbol i:nth-child(2){transform:translateX(-3px)}
-.hero{position:relative;isolation:isolate;overflow:hidden}.hero::before{content:"";position:absolute;width:650px;height:650px;right:8%;top:0;background:radial-gradient(ellipse,#9945ff10,transparent 65%);pointer-events:none;z-index:-1}
-.hero-grid{position:relative;display:grid;grid-template-columns:1fr 1.06fr;min-height:730px;align-items:center;gap:12px}
-.hero-copy{position:relative;z-index:3;padding:52px 0 48px}
-.eyebrow{display:flex;align-items:center;gap:9px;color:var(--mint);font:10px var(--mono);letter-spacing:2px;text-transform:uppercase}.status-dot{width:6px;height:6px;border-radius:50%;background:var(--mint);box-shadow:0 0 14px #14f19570}
-h1{margin:27px 0 0;line-height:.77;font-size:clamp(160px,17.8vw,250px);font-weight:900;letter-spacing:-.087em;position:relative;width:max-content}
-h1::after{content:"404";position:absolute;inset:0;color:var(--lilac);opacity:.5;clip-path:inset(57% 0 35% 0);transform:translateX(5px);animation:glitch 8s infinite}
-@keyframes glitch{0%,91%,100%{transform:translateX(5px)}92%{transform:translateX(-7px)}93%{transform:translateX(12px)}94%{transform:translateX(0)}}
-.hero-title{font-size:clamp(29px,3.05vw,44px);line-height:1.05;letter-spacing:-1.4px;font-weight:700;margin:27px 0 0}.hero-title span{color:var(--lilac)}
-.hero-tag{margin:24px 0 0;font:10px/1.8 var(--mono);letter-spacing:2.1px;color:#d4d2dd}
-.hero-description{color:var(--muted);font-size:15px;line-height:1.75;max-width:400px;margin:20px 0 0}
-.cta-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px}
-.button{display:inline-flex;justify-content:center;align-items:center;gap:28px;min-height:49px;padding:0 20px;background:var(--mint);border:1px solid var(--mint);border-radius:4px;color:#06150e;font:700 10px var(--mono);letter-spacing:.8px;transition:background .2s,transform .2s}
-.button:hover{background:#69ffc1;transform:translateY(-2px)}.button svg{width:15px;height:15px}.button.ghost{background:#ffffff03;color:#dedce7;border-color:#ffffff26;gap:15px}.button.ghost:hover{border-color:var(--lilac);background:#9945ff10}
-.hero-links{display:flex;align-items:center;gap:18px;margin-top:24px;font:10px var(--mono);color:#868493}
-.social-link{background:none;border:0;padding:4px 0;display:flex;align-items:center;gap:7px;font:10px var(--mono)}.social-link:not(:disabled):hover{color:var(--mint)}.social-link:disabled{color:#868493}.social-link svg{width:13px;height:13px}.soon{font-size:8px;color:#9a98a5;letter-spacing:.5px}.link-separator{height:13px;width:1px;background:var(--line)}
-.hero-art{position:relative;height:100%;min-height:680px;align-self:stretch;z-index:1;margin-right:-65px;pointer-events:none}
-.hero-art img{width:100%;height:100%;position:absolute;inset:0;object-fit:cover;object-position:50% 46%;mask-image:linear-gradient(90deg,transparent 0%,#000 16%,#000 92%,transparent 100%)}
-.hero-art::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,var(--bg),transparent 18%,transparent 70%,var(--bg));pointer-events:none}
-.art-corner{position:absolute;width:18px;height:18px;border-color:#c8a7ff70;border-style:solid;z-index:2}.art-corner.tl{top:78px;left:11%;border-width:1px 0 0 1px}.art-corner.tr{top:78px;right:11%;border-width:1px 1px 0 0}.art-corner.bl{bottom:72px;left:11%;border-width:0 0 1px 1px}.art-corner.br{bottom:72px;right:11%;border-width:0 1px 1px 0}
-.art-code{position:absolute;z-index:3;top:40px;left:11%;font:9px var(--mono);color:#8d849f;letter-spacing:1px}
-.art-label{position:absolute;z-index:3;bottom:94px;left:16%;right:16%;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:15px 0;border-top:1px solid #ffffff25;font:9px/1.6 var(--mono);letter-spacing:1px;color:#c3c0d2}.art-label strong{display:block;font-size:12px;color:var(--mint);font-weight:400}.art-label .coordinates{color:#aaa1bd;text-align:right;font-size:8px}
-.signal-ribbon{border-block:1px solid var(--line);background:linear-gradient(90deg,#14f19504,#9945ff07);overflow:hidden}.ribbon-inner{display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:64px;font:10px var(--mono);letter-spacing:2px;white-space:nowrap;color:#c6c3cf}.ribbon-inner .asterisk{color:var(--purple);font-size:23px}.ribbon-inner .mint{color:var(--mint)}
-.lore{padding:110px 0 106px}.section-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:38px;color:#96909f;font:9px var(--mono);letter-spacing:1.7px}.section-top span:first-child{color:var(--lilac)}
-.lore-grid{display:grid;grid-template-columns:1fr 1fr;gap:90px;align-items:center}
-h2{font-size:clamp(34px,4.2vw,59px);line-height:1.04;letter-spacing:-2.8px;font-weight:700;margin:0}h2 .dim{color:#8d879d}
-.lore-copy{margin-top:27px;color:var(--muted);max-width:430px;font-size:15px;line-height:1.85}.lore-copy strong{color:#ddd7e9;font-weight:400}
-.lore-last{display:flex;gap:12px;align-items:center;margin-top:26px;font:11px var(--mono);color:var(--mint)}.lore-last::before{content:"";width:28px;height:1px;background:var(--mint)}
-.terminal{border:1px solid #c8a7ff23;border-radius:9px;background:linear-gradient(150deg,#15121e,#0c0d12);box-shadow:0 30px 65px #0004;overflow:hidden;scroll-margin-top:100px}
-.terminal-top{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:17px 20px;color:#a39aaf;font:9px var(--mono);letter-spacing:1px}.terminal-dots{display:flex;gap:5px;align-items:center}.terminal-dots i{height:5px;width:5px;border-radius:50%;background:#534b65}.terminal-dots i:first-child{background:var(--purple)}
-.terminal-body{min-height:302px;padding:25px 24px;font:11px/2.25 var(--mono);color:#ada3c1}.terminal-line{display:flex;justify-content:space-between;gap:12px}.terminal-line span:last-child{color:var(--lilac)}.terminal-line.mint,.terminal-line.mint span:last-child{color:var(--mint)}.terminal-spacer{height:15px}
-.cursor{display:inline-block;background:var(--mint);width:6px;height:12px;margin-left:7px;vertical-align:-2px;animation:blink 1.2s steps(2,start) infinite}@keyframes blink{to{visibility:hidden}}
-.terminal-bottom{border-top:1px solid var(--line);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;color:#948aab;font:8px var(--mono);letter-spacing:1px}.rescan{border:0;background:none;color:var(--lilac);font:9px var(--mono);padding:4px}.rescan:hover{color:var(--mint)}.rescan:disabled{opacity:.55}
-.signal{padding:82px 0 95px;border-top:1px solid var(--line);background:radial-gradient(ellipse at 80% 100%,#9945ff0d,transparent 65%)}.signal-heading{display:grid;grid-template-columns:1.18fr 1fr;align-items:end;gap:75px}.signal-heading h2{font-size:clamp(33px,3.6vw,49px)}.signal-heading p{font-size:15px;line-height:1.8;color:var(--muted);margin:0;max-width:380px}
-.signal-stats{display:grid;grid-template-columns:repeat(3,1fr);margin-top:48px;border-block:1px solid var(--line)}.stat{padding:29px 30px 29px 0}.stat+.stat{border-left:1px solid var(--line);padding-left:35px}.stat-label{font:9px var(--mono);letter-spacing:1.4px;color:#a198ae;display:block;margin-bottom:13px}.stat-value{font:22px var(--mono);letter-spacing:-1px;color:var(--lilac)}.stat:last-child .stat-value{color:var(--mint)}.stat-caption{font:9px var(--mono);display:block;margin-top:10px;color:#a198ae}
-.contract{margin-top:36px;display:flex;justify-content:space-between;align-items:center;gap:18px;font:10px var(--mono);color:var(--muted)}.contract-label{display:flex;align-items:center;gap:12px}.contract-label b{color:#d1ccd9;font-weight:400}.pending{color:#ac9dc7;font-size:9px;letter-spacing:1px}.contract-copy{border:1px solid var(--line);background:transparent;border-radius:4px;padding:10px;color:var(--mint);font:10px var(--mono)}.contract-value{overflow-wrap:anywhere;line-height:1.7}
-.footer{border-top:1px solid var(--line);padding:28px 0 35px}.footer-inner{display:flex;justify-content:space-between;align-items:center;gap:20px;color:#a198ae;font:9px var(--mono);letter-spacing:1px}.footer-brand{font:900 21px Arial,sans-serif;letter-spacing:-1.8px;color:#eae5f2}.footer-links{display:flex;align-items:center;gap:22px}.back-top:hover{color:var(--mint)}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);border:1px solid #14f19550;background:#0b1613;color:#cdffe9;padding:14px 22px;border-radius:6px;font:11px var(--mono);opacity:0;pointer-events:none;transition:.2s;z-index:100;max-width:calc(100% - 32px)}.toast.visible{opacity:1;transform:translateX(-50%) translateY(0)}
-@media(min-width:1600px){.hero-grid{min-height:790px}.hero-art{min-height:750px}.hero-copy{padding-block:75px}}
-@media(max-width:1100px){.container{width:calc(100% - 64px)}.hero-grid{grid-template-columns:1.05fr 1fr;min-height:700px}.hero-art{margin-right:-50px;min-height:670px}.hero-title{font-size:34px}.hero-description{font-size:14px;max-width:345px}.nav-links{gap:20px}.edition{font-size:9px}.lore-grid{gap:42px}.signal-heading{gap:45px}.ribbon-inner{font-size:9px;letter-spacing:1px}.hero-tag{font-size:9px;letter-spacing:1.2px}}
-@media(max-width:800px){.container{width:calc(100% - 40px)}.nav{height:72px}.nav-links{display:none}.brand-name{font-size:8px}.brand{gap:11px}.edition{font-size:8px;letter-spacing:.8px}.hero-grid{grid-template-columns:1fr;gap:0;min-height:0}.hero-copy{padding:42px 0 22px}.hero .eyebrow{font-size:9px}.hero h1{font-size:clamp(152px,34vw,240px);margin-top:26px}.hero-title{font-size:36px;letter-spacing:-1.4px;margin-top:25px}.hero-description{max-width:470px;margin-top:16px}.hero-tag{margin-top:20px}.cta-row{margin-top:25px}.hero-art{height:470px;min-height:0;margin:0 -20px}.hero-art img{object-position:50% 38%;mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}.art-code{top:20px;left:9%}.art-corner.tl,.art-corner.tr{top:45px}.art-corner.bl,.art-corner.br{bottom:40px}.art-label{bottom:53px;left:13%;right:13%}.ribbon-inner{min-height:57px;gap:22px;justify-content:center}.ribbon-inner .ribbon-secondary{display:none}.lore{padding:65px 0}.section-top{font-size:8px;margin-bottom:30px;letter-spacing:1px}.lore-grid{grid-template-columns:1fr;gap:35px}h2{font-size:43px;letter-spacing:-2px}.lore-copy{max-width:540px;margin-top:22px}.terminal-body{min-height:275px}.signal{padding:57px 0 60px}.signal-heading{grid-template-columns:1fr;gap:24px}.signal-heading h2{font-size:38px}.signal-heading p{max-width:540px}.signal-stats{margin-top:30px}.stat{padding:22px 12px 22px 0}.stat+.stat{padding-left:16px}.stat-value{font-size:17px}.stat-label,.stat-caption{font-size:8px}.contract{align-items:flex-start;flex-wrap:wrap;font-size:9px}.footer-inner{font-size:8px}.footer-links{gap:15px}.footer-edition{display:none}}
-@media(max-width:380px){.container{width:calc(100% - 32px)}.edition{letter-spacing:0;gap:7px}.brand-name{font-size:7px}.hero h1{font-size:148px}.hero-title{font-size:32px}.button{padding:0 13px;gap:16px;font-size:9px}.hero-links{gap:12px}.hero-art{height:405px}.stat-value{font-size:14px}.stat+.stat{padding-left:10px}.terminal-body{padding:22px 17px;font-size:10px}.section-top span:last-child{font-size:7px}}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}}
-</style>
-<link rel="stylesheet" href="assets/matrix-v1.css">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#070b0a">
+<meta name="robots" content="noindex,nofollow">
+<meta name="description" content="404 — Ghost Mode. A name can be replaced. A face can be erased. The signal remains.">
+<title>404 // GHOST MODE — HACKER CONCEPT</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23070b0a'/%3E%3Ctext x='32' y='40' text-anchor='middle' font-family='monospace' font-weight='bold' font-size='26' fill='%2365ffb1'%3E404%3C/text%3E%3C/svg%3E">
+<link rel="preload" as="image" href="/assets/404-hood-matrix.webp">
+<link rel="stylesheet" href="/assets/hacker-v1.css">
+<script src="/assets/matrix-v1.js" defer></script>
+<script src="/assets/hacker-v1.js" defer></script>
 </head>
-<body>
+<body id="top">
+<a class="skip" href="#manifesto">Skip to content</a>
 <canvas id="matrix-rain" aria-hidden="true"></canvas>
-<a class="skip" href="#main">Skip to content</a>
-<header class="nav" id="top"><div class="container nav-inner">
-<a class="brand" href="#top" aria-label="404 — Identity Not Found home"><span class="brand-mark">404</span><span class="brand-divider" aria-hidden="true"></span><span class="brand-name">IDENTITY<br>NOT FOUND</span></a>
-<nav class="nav-links" aria-label="Main navigation"><a href="#lore">THE LORE</a><a href="#signal">THE SIGNAL</a><a href="#terminal" data-scan>TERMINAL ↗</a></nav>
-<div class="nav-controls"><div class="edition"><span class="sol-symbol" aria-hidden="true"><i></i><i></i><i></i></span>SOLANA EDITION</div><button type="button" class="motion-toggle" id="motion-toggle" aria-label="Pause visual effects" aria-pressed="false"><i class="motion-icon" aria-hidden="true"></i><span class="motion-text">PAUSE FX</span></button></div>
-</div></header>
-<main id="main">
-<section class="hero" aria-labelledby="hero-heading"><div class="container hero-grid">
-<div class="hero-copy">
-<div class="eyebrow"><span class="status-dot" aria-hidden="true"></span>THE SIGNAL REMAINS</div>
-<h1 id="hero-heading" aria-label="404">404</h1><p class="hero-title">IDENTITY<br><span>NOT FOUND.</span></p>
-<p class="hero-tag">NO NAME. NO FACE. NO IDENTITY.</p>
-<p class="hero-description">A signal without a profile. A presence without a face. The network searched for a human identity.<br>It found only <strong>404.</strong></p>
-<div class="cta-row"><a class="button" href="#lore">ENTER THE VOID <svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><path d="M4 10h12m-5-5 5 5-5 5" stroke="currentColor" stroke-width="1.5"/></svg></a><a class="button ghost" href="#terminal" data-scan><span aria-hidden="true">⌘</span> RUN IDENTITY SCAN</a></div>
-<div class="hero-links" aria-label="Community links">
-<button class="social-link" data-social="x" disabled aria-label="X community link coming soon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3L12 14.6 5.5 22H2.3l7.4-8.5L1 2h6.5l4.6 6.8L18.9 2Zm-1.1 18h1.7L6.5 3.9H4.7L17.8 20Z"/></svg><span class="soon">SOON</span></button>
-<span class="link-separator" aria-hidden="true"></span>
-<button class="social-link" data-social="telegram" disabled aria-label="Telegram community link coming soon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m21.5 3.4-3.3 17c-.2 1.2-.9 1.5-1.8.9l-5-3.8-2.4 2.4c-.3.3-.5.5-1 .5l.3-5.2 9.4-8.5c.4-.4-.1-.6-.6-.3L5.5 13.7.7 12.2c-1-.3-1-1 .2-1.5L19.7 3c.9-.3 1.8.2 1.8.4Z"/></svg>TELEGRAM <span class="soon">SOON</span></button>
-</div></div>
-<div class="hero-art">
-<div class="identity-subject"><img src="assets/404-hood-matrix.webp" alt="The anonymous hooded 404 figure surrounded by falling binary code" width="1254" height="1254" fetchpriority="high"></div>
-<div class="scan-field" aria-hidden="true"><div class="scan-beam"></div><div class="face-reticle"></div></div><div class="scan-noise" aria-hidden="true"></div>
-<span class="art-code">IDENTITY SEARCH // NO MATCH</span>
-<div class="signal-meter" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-<i class="art-corner tl" aria-hidden="true"></i><i class="art-corner tr" aria-hidden="true"></i><i class="art-corner bl" aria-hidden="true"></i><i class="art-corner br" aria-hidden="true"></i>
-<div class="art-label"><span>SUBJECT ID<strong data-scramble="UNIDENTIFIED" aria-label="Unidentified">UNIDENTIFIED</strong></span><span class="coordinates">ORIGIN: UNKNOWN<br>SIGNAL: PERSISTENT</span></div>
-</div></div></section>
-<div class="signal-ribbon" aria-hidden="true"><div class="ribbon-track"><div class="ribbon-set"><span class="binary">01010101</span><strong>NO NAME.</strong><span class="separator">//</span><strong>NO FACE.</strong><span class="binary">10101010</span><strong>NO IDENTITY.</strong><span class="separator">//</span><strong>ONLY THE SIGNAL.</strong><span class="binary">00110100</span><span>STATUS: 404</span></div><div class="ribbon-set"><span class="binary">01010101</span><strong>NO NAME.</strong><span class="separator">//</span><strong>NO FACE.</strong><span class="binary">10101010</span><strong>NO IDENTITY.</strong><span class="separator">//</span><strong>ONLY THE SIGNAL.</strong><span class="binary">00110100</span><span>STATUS: 404</span></div></div></div>
-<section class="lore" id="lore" aria-labelledby="lore-heading"><div class="container">
-<div class="section-top"><span>01 / THE LORE</span><span>TRANSMISSION RECOVERED</span></div>
-<div class="lore-grid"><div>
-<h2 id="lore-heading">THE SYSTEM<br>LOOKED FOR<br><span class="dim">A PERSON.</span></h2>
-<p class="lore-copy">It searched for a name.<br>It searched for a face.<br>It searched for an identity.<br><strong>It found only 404.</strong></p>
-<p class="lore-copy">Not a profile. Not a biography. Not a person to classify. Just the signal that remains after every label disappears.</p>
-<p class="lore-last">THE ERROR BECAME THE SYMBOL.</p></div>
-<div class="terminal" id="terminal" role="region" aria-label="Interactive identity scanner">
-<div class="terminal-top"><span class="terminal-dots" aria-hidden="true"><i></i><i></i><i></i></span><span>identity_scan.exe</span><span>v.404</span></div>
-<div class="terminal-body" id="terminal-output" aria-label="Identity scan output"><div class="terminal-line mint">&gt; identity_scan.exe</div><div class="terminal-spacer"></div><div class="terminal-line"><span>Searching name</span><span>[not found]</span></div><div class="terminal-line"><span>Searching face</span><span>[not found]</span></div><div class="terminal-line"><span>Searching identity</span><span>[not found]</span></div><div class="terminal-line mint"><span>Signal integrity</span><span>[persistent]</span></div><div class="terminal-spacer"></div><div class="terminal-line mint">&gt; STATUS: 404</div><div>&gt; signal remains<span class="cursor" aria-hidden="true"></span></div></div>
-<div class="terminal-bottom"><span id="scan-status" role="status" aria-live="polite">SCAN COMPLETE // IDENTITY NOT FOUND</span><button class="rescan" id="rescan" type="button">RESCAN ↻</button></div>
-</div></div></div></section>
-<section class="signal" id="signal" aria-labelledby="signal-heading"><div class="container">
-<div class="section-top"><span>02 / SIGNAL ANALYSIS</span><span>THE UNCLASSIFIED</span></div>
-<div class="signal-heading"><h2 id="signal-heading">THE ERROR<br>BECAME THE BRAND.</h2><p>Every system wants a name. Every profile needs a face. 404 is what remains when the labels disappear.<br>A presence you cannot classify.</p></div>
-<div class="signal-stats"><div class="stat"><span class="stat-label">01 / NAME</span><span class="stat-value">NULL</span><span class="stat-caption">NO LABEL TO FOLLOW</span></div><div class="stat"><span class="stat-label">02 / FACE</span><span class="stat-value">UNRESOLVED</span><span class="stat-caption">NO FACE TO RECOGNIZE</span></div><div class="stat"><span class="stat-label">03 / IDENTITY</span><span class="stat-value">NOT FOUND</span><span class="stat-caption">ONLY 404 REMAINS</span></div></div>
-<div class="contract"><div class="contract-label"><b>CA</b><span class="link-separator" aria-hidden="true"></span><span class="contract-value" id="contract-value">CONTRACT ADDRESS NOT ANNOUNCED</span></div><span class="pending" id="contract-status">COMING SOON</span><button type="button" class="contract-copy" id="copy-contract" hidden>COPY ADDRESS</button></div>
-</div></section></main>
-<footer class="footer"><div class="container footer-inner"><a class="footer-brand" href="#top" aria-label="404 home">404</a><span>NO NAME. NO FACE. NO IDENTITY.</span><div class="footer-links"><span class="footer-edition">SOLANA EDITION</span><a class="back-top" href="#top" aria-label="Back to top">↑ TOP</a></div></div></footer>
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script>
-// Leave empty until the real project community links and contract are confirmed.
-const SITE_CONFIG = { xUrl: '', telegramUrl: '', contractAddress: '' };
-const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-const output = document.getElementById('terminal-output');
-const scanButton = document.getElementById('rescan');
-const scanStatus = document.getElementById('scan-status');
-const scanLines = [
-['> identity_scan.exe', '', 'mint'], ['', '', 'space'],
-['Searching name', '[not found]'], ['Searching face', '[not found]'],
-['Searching identity', '[not found]'], ['Signal integrity', '[persistent]', 'mint'],
-['', '', 'space'], ['> STATUS: 404', '', 'mint'], ['> signal remains', '', 'cursor']
-];
-let scanTimers = [];
-function runScan(){
-scanTimers.forEach(clearTimeout);scanTimers=[];output.replaceChildren();
-scanButton.disabled=true;scanStatus.textContent='SCANNING IDENTITY…';
-scanLines.forEach(([label,value,type],index)=>{
-const append=()=>{
-const row=document.createElement('div');
-if(type==='space'){row.className='terminal-spacer';}
-else{
-row.className='terminal-line'+(type==='mint'?' mint':'');
-const text=document.createElement('span');text.textContent=label;row.append(text);
-if(value){const status=document.createElement('span');status.textContent=value;row.append(status);}
-if(type==='cursor'){const caret=document.createElement('span');caret.className='cursor';caret.setAttribute('aria-hidden','true');text.append(caret);}
-}
-output.append(row);
-if(index===scanLines.length-1){scanButton.disabled=false;scanStatus.textContent='SCAN COMPLETE // IDENTITY NOT FOUND';}
-};
-if(reducedMotion.matches)append();else scanTimers.push(setTimeout(append,index*180));
-});
-}
-scanButton.addEventListener('click',runScan);
-document.querySelectorAll('[data-scan]').forEach(link=>link.addEventListener('click',runScan));
-const terminalObserver=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting)){runScan();terminalObserver.disconnect();}},{threshold:.45});
-terminalObserver.observe(document.getElementById('terminal'));
-function safeUrl(value){try{const url=new URL(value);return url.protocol==='https:'?url.href:null;}catch{return null;}}
-for(const [key,value] of Object.entries({x:SITE_CONFIG.xUrl,telegram:SITE_CONFIG.telegramUrl})){
-const url=safeUrl(value);if(!url)continue;
-document.querySelectorAll('[data-social="'+key+'"]').forEach(button=>{
-const link=document.createElement('a');link.className=button.className;link.href=url;link.target='_blank';link.rel='noopener noreferrer';link.setAttribute('aria-label',key==='x'?'404 on X':'404 on Telegram');link.innerHTML=button.innerHTML;link.querySelector('.soon')?.remove();button.replaceWith(link);
-});
-}
-const ca=SITE_CONFIG.contractAddress.trim();
-if(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(ca)){
-document.getElementById('contract-value').textContent=ca;document.getElementById('contract-status').hidden=true;
-const copy=document.getElementById('copy-contract');copy.hidden=false;
-copy.addEventListener('click',async()=>{const toast=document.getElementById('toast');try{await navigator.clipboard.writeText(ca);toast.textContent='Contract address copied.';}catch{toast.textContent='Select the address to copy it manually.';}toast.classList.add('visible');setTimeout(()=>toast.classList.remove('visible'),2500);});
-}
-</script>
-<script src="assets/matrix-v1.js" defer></script>
+<div class="page">
+<header class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#top" aria-label="404 home"><span class="brand-mark">404</span><span class="brand-name">IDENTITY<br>NOT FOUND</span></a>
+    <nav class="nav-links" aria-label="Main navigation"><a href="#manifesto">01 / MANIFESTO</a><a href="#terminal">02 / TERMINAL</a><a href="#archive">03 / ARCHIVE</a></nav>
+    <div class="nav-controls"><span class="edition">SOLANA / GHOST MODE</span><button class="motion-toggle" id="motion-toggle" type="button" aria-label="Pause visual effects" aria-pressed="false"><span class="motion-icon" aria-hidden="true"></span><span class="motion-text">PAUSE FX</span></button></div>
+  </div>
+</header>
+<main>
+  <div class="container concept-line"><span><strong>CONCEPT 02</strong> / GHOST MODE</span><span class="concept-extra">/ VOID / UNKNOWN / 404</span></div>
+  <section class="hero container" aria-label="404, Identity Not Found">
+    <div class="hero-window">
+      <div class="window-bar"><span class="window-title"><span class="window-lights" aria-hidden="true"><i></i><i></i><i></i></span>root@404:~ / identity.session</span><span class="window-state"><i class="dot" aria-hidden="true"></i>MASK ACTIVE</span></div>
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <div class="shell-prompt"><span>&gt;</span> whoami<span aria-hidden="true"> _</span></div>
+          <h1 aria-label="404">404</h1>
+          <p class="hero-title">IDENTITY<br><span>NOT FOUND.</span></p>
+          <p class="hero-description">A name can be replaced.<br>A face can be erased.<br>404 is the signal left behind.</p>
+          <div class="cta-row"><button class="button" type="button" id="rotate-identity">ROTATE IDENTITY <span aria-hidden="true">↻</span></button><a class="button ghost" href="#terminal">OPEN TERMINAL <span aria-hidden="true">↗</span></a></div>
+          <div class="community" aria-label="Community channels coming soon"><span>X <span class="soon">/ SOON</span></span><span>TELEGRAM <span class="soon">/ SOON</span></span></div>
+          <p class="micro-note">NO NAME. NO FACE. NO IDENTITY.</p>
+        </div>
+        <div class="hero-art">
+          <div class="art-code" aria-hidden="true">SUBJECT_404 // VISUAL FRAGMENT</div>
+          <div class="identity-subject"><img src="/assets/404-hood-matrix.webp" alt="An unidentified hooded figure with a glowing 404 face, outlined in Solana green and purple" width="1254" height="1254" fetchpriority="high" decoding="async"></div>
+          <i class="crosshair tl" aria-hidden="true"></i><i class="crosshair tr" aria-hidden="true"></i><i class="crosshair bl" aria-hidden="true"></i><i class="crosshair br" aria-hidden="true"></i>
+          <div class="scan-field" aria-hidden="true"><div class="scan-beam"></div></div><div class="scan-noise" aria-hidden="true"></div>
+          <div class="redaction-bar" aria-hidden="true">DATA REMOVED</div>
+          <div class="art-label"><span>CLASSIFICATION<strong data-scramble="UNIDENTIFIED">UNIDENTIFIED</strong></span><span class="coordinates">FACE: NULL<br>HUMAN: UNKNOWN</span></div>
+        </div>
+        <aside class="identity-panel" aria-label="Fictional identity dossier">
+          <div class="panel-kicker">// IDENTITY DOSSIER</div>
+          <dl class="identity-fields">
+            <div class="identity-field"><dt>01 / ALIAS</dt><dd class="changing" id="alias-value">ghost_0x404</dd></div>
+            <div class="identity-field"><dt>02 / SESSION</dt><dd class="changing" id="session-value">7F3A:01D4</dd></div>
+            <div class="identity-field"><dt>03 / NAME</dt><dd><span class="redacted">[REDACTED]</span></dd></div>
+            <div class="identity-field"><dt>04 / ORIGIN</dt><dd><span class="redacted">[REDACTED]</span></dd></div>
+          </dl>
+          <button class="unmask" id="unmask-subject" type="button">UNMASK SUBJECT ↗</button>
+          <div class="attempt-state" id="attempt-state" role="status">EVERY SEARCH ENDS AT 404.</div>
+          <div class="fingerprint" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="panel-footer">FILE EXISTS. IDENTITY DOES NOT.</div>
+        </aside>
+      </div>
+      <div class="hero-bottom"><span>REQUEST: <b>IDENTITY</b></span><span class="bottom-extra">PROFILE: [ UNRESOLVED ]</span><span>RESULT: <b>ERROR_404</b></span><span class="progress-blocks" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+    </div>
+  </section>
+  <div class="signal-ribbon" aria-hidden="true"><div class="ribbon-track">
+    <div class="ribbon-set"><b>01001110 01001111</b><span>NAME: NULL</span><em>/// SOLANA</em><span>FACE: NULL</span><b>00110100 00110000 00110100</b><span>IDENTITY: NOT FOUND</span><span>THE SIGNAL REMAINS</span><em>/// GHOST MODE</em></div>
+    <div class="ribbon-set"><b>01001110 01001111</b><span>NAME: NULL</span><em>/// SOLANA</em><span>FACE: NULL</span><b>00110100 00110000 00110100</b><span>IDENTITY: NOT FOUND</span><span>THE SIGNAL REMAINS</span><em>/// GHOST MODE</em></div>
+  </div></div>
+  <section class="section container" id="manifesto" aria-labelledby="manifesto-title">
+    <div class="section-top"><span>01 / THE MANIFESTO</span><span>READ PERMISSION: UNRESTRICTED</span></div>
+    <div class="lore-grid">
+      <div class="manifesto"><h2 id="manifesto-title">THE FILE EXISTS.<br><span>THE PERSON<br>DOESN’T.</span></h2><p>Every system asks the same questions.<br>What is your name? Show us your face.<br>Prove you belong.</p><p>404 is the answer they cannot file.<br>A presence without a profile. A signal without a signature. The shape changes.<br>The absence stays.</p><p class="manifesto-last">YOU FOUND THE SIGNAL. NOT THE SOURCE.</p></div>
+      <div class="terminal" id="terminal" aria-label="Interactive fictional 404 terminal">
+        <div class="terminal-top"><span><b>404://</b> GHOST SHELL</span><span>FICTIONAL TERMINAL</span></div>
+        <div class="terminal-output" id="terminal-output" role="log" aria-label="Terminal output" aria-live="polite" aria-relevant="additions" tabindex="0"><div class="terminal-line muted">404 OS [GHOST MODE]</div><div class="terminal-line">Loading identity fragment...</div><div class="terminal-line success">[ OK ] Signal detected.</div><div class="terminal-line warn">[404 ] Identity could not be resolved.</div><div class="terminal-line muted"> </div><div class="terminal-line">This is where names disappear.</div><div class="terminal-line muted">Type “help” to explore the story.</div></div>
+        <form class="terminal-form" id="terminal-form" autocomplete="off"><label for="terminal-input"><span aria-hidden="true">ghost@404:~$</span><span class="sr-only">Terminal command</span></label><input id="terminal-input" name="command" placeholder="type help_" maxlength="80" spellcheck="false" autocapitalize="off" enterkeyhint="send" aria-describedby="terminal-help"><button type="submit" aria-label="Run terminal command">↵</button></form>
+        <div class="terminal-hints" id="terminal-help"><span>TRY:</span><button type="button" data-command="help">[ help ]</button><button type="button" data-command="whoami">[ whoami ]</button><button type="button" data-command="trace">[ trace ]</button><span>EXPLORE THE FRAGMENTS_</span></div>
+      </div>
+    </div>
+  </section>
+  <section class="section archive" id="archive" aria-labelledby="archive-title"><div class="container">
+    <div class="section-top"><span>03 / THE REDACTED ARCHIVE</span><span>3 FILES / 0 IDENTITIES</span></div>
+    <div class="archive-heading signal-heading"><h2 id="archive-title">NOTHING TO HIDE.<br>NO ONE TO FIND.</h2><p>The system kept the files.<br>Someone removed the answers.<br>Open a fragment. Follow what remains.</p></div>
+    <div class="vault">
+      <div class="vault-tabs" role="tablist" aria-label="Fictional identity files"><span class="vault-title" aria-hidden="true">/ 404 / FRAGMENTS</span><button class="file-tab" type="button" id="tab-identity" role="tab" aria-selected="true" aria-controls="file-panel" data-file="identity">{ } identity.json</button><button class="file-tab" type="button" id="tab-fingerprint" role="tab" aria-selected="false" aria-controls="file-panel" tabindex="-1" data-file="fingerprint"># fingerprint.log</button><button class="file-tab" type="button" id="tab-memory" role="tab" aria-selected="false" aria-controls="file-panel" tabindex="-1" data-file="memory">~ memory.dump</button></div>
+      <div class="vault-panel" id="file-panel" role="tabpanel" aria-labelledby="tab-identity" tabindex="0"><div class="file-top"><span id="file-path">/unknown/identity.json</span><span>READ ONLY</span></div><pre class="file-content" id="file-content">{
+  "subject": "404",
+  "alias": "ghost_0x404",
+  "name": "[REDACTED]",
+  "face": null,
+  "origin": "[REDACTED]",
+  "status": "IDENTITY_NOT_FOUND",
+  "network": "SOLANA"
+}</pre></div>
+    </div>
+    <div class="contract"><span><b>CA</b> / CONTRACT ADDRESS NOT ANNOUNCED</span><span class="pending">COMING SOON</span></div>
+  </div></section>
+</main>
+<footer class="footer"><div class="container footer-inner"><a class="footer-brand" href="#top" aria-label="Back to top">404</a><span>NO NAME. NO FACE. NO IDENTITY.</span><span class="footer-edition">SOLANA / GHOST MODE</span><a href="#top">↑ TOP</a></div></footer>
+</div>
+<div class="status-toast" id="status-toast" role="status" aria-live="polite"></div>
 </body>
 </html>
