@@ -66,13 +66,15 @@ h2{font-size:clamp(34px,4.2vw,59px);line-height:1.04;letter-spacing:-2.8px;font-
 @media(max-width:380px){.container{width:calc(100% - 32px)}.edition{letter-spacing:0;gap:7px}.brand-name{font-size:7px}.hero h1{font-size:148px}.hero-title{font-size:32px}.button{padding:0 13px;gap:16px;font-size:9px}.hero-links{gap:12px}.hero-art{height:405px}.stat-value{font-size:14px}.stat+.stat{padding-left:10px}.terminal-body{padding:22px 17px;font-size:10px}.section-top span:last-child{font-size:7px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
+<link rel="stylesheet" href="assets/matrix-v1.css">
 </head>
 <body>
+<canvas id="matrix-rain" aria-hidden="true"></canvas>
 <a class="skip" href="#main">Skip to content</a>
 <header class="nav" id="top"><div class="container nav-inner">
 <a class="brand" href="#top" aria-label="404 — Identity Not Found home"><span class="brand-mark">404</span><span class="brand-divider" aria-hidden="true"></span><span class="brand-name">IDENTITY<br>NOT FOUND</span></a>
 <nav class="nav-links" aria-label="Main navigation"><a href="#lore">THE LORE</a><a href="#signal">THE SIGNAL</a><a href="#terminal" data-scan>TERMINAL ↗</a></nav>
-<div class="edition"><span class="sol-symbol" aria-hidden="true"><i></i><i></i><i></i></span>SOLANA EDITION</div>
+<div class="nav-controls"><div class="edition"><span class="sol-symbol" aria-hidden="true"><i></i><i></i><i></i></span>SOLANA EDITION</div><button type="button" class="motion-toggle" id="motion-toggle" aria-label="Pause visual effects" aria-pressed="false"><i class="motion-icon" aria-hidden="true"></i><span class="motion-text">PAUSE FX</span></button></div>
 </div></header>
 <main id="main">
 <section class="hero" aria-labelledby="hero-heading"><div class="container hero-grid">
@@ -88,12 +90,14 @@ h2{font-size:clamp(34px,4.2vw,59px);line-height:1.04;letter-spacing:-2.8px;font-
 <button class="social-link" data-social="telegram" disabled aria-label="Telegram community link coming soon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m21.5 3.4-3.3 17c-.2 1.2-.9 1.5-1.8.9l-5-3.8-2.4 2.4c-.3.3-.5.5-1 .5l.3-5.2 9.4-8.5c.4-.4-.1-.6-.6-.3L5.5 13.7.7 12.2c-1-.3-1-1 .2-1.5L19.7 3c.9-.3 1.8.2 1.8.4Z"/></svg>TELEGRAM <span class="soon">SOON</span></button>
 </div></div>
 <div class="hero-art">
-<img src="assets/404-solana.jpg" alt="The anonymous hooded 404 figure illuminated by violet and mint light" width="1254" height="1254" fetchpriority="high">
-<span class="art-code">VISUAL TRANSMISSION // 004</span>
+<div class="identity-subject"><img src="assets/404-hood-matrix.webp" alt="The anonymous hooded 404 figure surrounded by falling binary code" width="1254" height="1254" fetchpriority="high"></div>
+<div class="scan-field" aria-hidden="true"><div class="scan-beam"></div><div class="face-reticle"></div></div><div class="scan-noise" aria-hidden="true"></div>
+<span class="art-code">IDENTITY SEARCH // NO MATCH</span>
+<div class="signal-meter" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
 <i class="art-corner tl" aria-hidden="true"></i><i class="art-corner tr" aria-hidden="true"></i><i class="art-corner bl" aria-hidden="true"></i><i class="art-corner br" aria-hidden="true"></i>
-<div class="art-label"><span>SUBJECT ID<strong>UNIDENTIFIED</strong></span><span class="coordinates">ORIGIN: UNKNOWN<br>SIGNAL: PERSISTENT</span></div>
+<div class="art-label"><span>SUBJECT ID<strong data-scramble="UNIDENTIFIED" aria-label="Unidentified">UNIDENTIFIED</strong></span><span class="coordinates">ORIGIN: UNKNOWN<br>SIGNAL: PERSISTENT</span></div>
 </div></div></section>
-<div class="signal-ribbon" aria-hidden="true"><div class="container ribbon-inner"><span>NO NAME.</span><span class="asterisk">✳</span><span>NO FACE.</span><span class="asterisk">✳</span><span class="mint">NO IDENTITY.</span><span class="asterisk ribbon-secondary">✳</span><span class="ribbon-secondary">ONLY THE SIGNAL.</span></div></div>
+<div class="signal-ribbon" aria-hidden="true"><div class="ribbon-track"><div class="ribbon-set"><span class="binary">01010101</span><strong>NO NAME.</strong><span class="separator">//</span><strong>NO FACE.</strong><span class="binary">10101010</span><strong>NO IDENTITY.</strong><span class="separator">//</span><strong>ONLY THE SIGNAL.</strong><span class="binary">00110100</span><span>STATUS: 404</span></div><div class="ribbon-set"><span class="binary">01010101</span><strong>NO NAME.</strong><span class="separator">//</span><strong>NO FACE.</strong><span class="binary">10101010</span><strong>NO IDENTITY.</strong><span class="separator">//</span><strong>ONLY THE SIGNAL.</strong><span class="binary">00110100</span><span>STATUS: 404</span></div></div></div>
 <section class="lore" id="lore" aria-labelledby="lore-heading"><div class="container">
 <div class="section-top"><span>01 / THE LORE</span><span>TRANSMISSION RECOVERED</span></div>
 <div class="lore-grid"><div>
@@ -165,5 +169,6 @@ const copy=document.getElementById('copy-contract');copy.hidden=false;
 copy.addEventListener('click',async()=>{const toast=document.getElementById('toast');try{await navigator.clipboard.writeText(ca);toast.textContent='Contract address copied.';}catch{toast.textContent='Select the address to copy it manually.';}toast.classList.add('visible');setTimeout(()=>toast.classList.remove('visible'),2500);});
 }
 </script>
+<script src="assets/matrix-v1.js" defer></script>
 </body>
 </html>
