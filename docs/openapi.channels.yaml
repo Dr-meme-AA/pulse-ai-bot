@@ -1,0 +1,165 @@
+openapi: 3.1.0
+info:
+  title: Pulse AI messaging callbacks
+  version: 0.1.0
+  description: |
+    Inbound contract of the separate, opt-in support service. Use the origin assigned to your gateway.
+    The Telegram bot runs by polling and does not expose a public REST endpoint. The three callback
+    adapters serve fixed account, privacy and human-support messages. No patient API is exposed here.
+    The request examples use synthetic account IDs. Sign the exact HTTP bytes for the provider
+    being exercised. A successful callback acknowledges receipt; it is not a delivery receipt.
+paths:
+  /healthz:
+    get:
+      operationId: getLiveness
+      responses:
+        '200':
+          description: Process is running. Provider configuration and handset delivery are independent.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties: {ok: {const: true}}
+  /webhooks/whatsapp:
+    get:
+      operationId: verifyMetaCallback
+      parameters:
+        - {in: query, name: hub.mode, required: true, schema: {const: subscribe}}
+        - {in: query, name: hub.verify_token, required: true, schema: {type: string}}
+        - {in: query, name: hub.challenge, required: true, schema: {type: string}}
+      responses:
+        '200': {$ref: '#/components/responses/Echo'}
+        '400': {$ref: '#/components/responses/Malformed'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/Disabled'}
+    post:
+      operationId: receiveMetaWebhook
+      security: [{MetaSignature: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [object, entry]
+              properties:
+                object: {const: whatsapp_business_account}
+                entry:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id: {type: string, description: WhatsApp Business Account ID}
+                      changes: {type: array, items: {type: object}}
+            example:
+              object: whatsapp_business_account
+              entry:
+                - id: '100000001'
+                  changes:
+                    - field: messages
+                      value:
+                        messaging_product: whatsapp
+                        metadata: {phone_number_id: '100000002'}
+                        messages:
+                          - {id: wamid.synthetic, from_user_id: synthetic-bsuid, timestamp: '1795219200', type: text, text: {body: Help}}
+      responses:
+        '200': {$ref: '#/components/responses/Accepted'}
+        '400': {$ref: '#/components/responses/Malformed'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/Disabled'}
+        '413': {$ref: '#/components/responses/TooLarge'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /webhooks/line:
+    post:
+      operationId: receiveLineWebhook
+      security: [{LineSignature: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [destination, events]
+              properties:
+                destination: {type: string, description: Official Account bot user ID}
+                events: {type: array, items: {type: object}, description: Empty array on callback verification}
+            examples:
+              verification:
+                value: {destination: U-test-bot-id, events: []}
+              directMessage:
+                value:
+                  destination: U-test-bot-id
+                  events:
+                    - type: message
+                      mode: active
+                      timestamp: 1795219200000
+                      source: {type: user, userId: U-test-sender}
+                      webhookEventId: test-event-id
+                      replyToken: test-reply-token
+                      message: {id: '100000003', type: text, text: Help}
+      responses:
+        '200': {$ref: '#/components/responses/Accepted'}
+        '400': {$ref: '#/components/responses/Malformed'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/Disabled'}
+        '413': {$ref: '#/components/responses/TooLarge'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /webhooks/wechat:
+    get:
+      operationId: verifyWeixinServiceAccount
+      description: Official Account setup signs the token, timestamp and nonce. The server returns the verified echostr. POST always uses safe mode.
+      parameters:
+        - {$ref: '#/components/parameters/WeixinTimestamp'}
+        - {$ref: '#/components/parameters/WeixinNonce'}
+        - {in: query, name: echostr, required: true, schema: {type: string}}
+        - {in: query, name: signature, schema: {type: string}, description: Required for standard ownership challenge}
+        - {in: query, name: msg_signature, schema: {type: string}, description: Used for encrypted echo variant}
+        - {in: query, name: encrypt_type, schema: {const: aes}, description: For encrypted echo variant}
+      responses:
+        '200': {$ref: '#/components/responses/Echo'}
+        '400': {$ref: '#/components/responses/Malformed'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/Disabled'}
+    post:
+      operationId: receiveWeixinServiceAccount
+      security: [{WeixinMessageSignature: []}]
+      parameters:
+        - {$ref: '#/components/parameters/WeixinTimestamp'}
+        - {$ref: '#/components/parameters/WeixinNonce'}
+        - {in: query, name: encrypt_type, required: true, schema: {const: aes}}
+      requestBody:
+        required: true
+        content:
+          application/xml:
+            schema: {type: string, description: Tencent safe-mode XML envelope containing Encrypt.}
+            example: '<xml><ToUserName>gh_synthetic</ToUserName><Encrypt>BASE64_ENVELOPE</Encrypt></xml>'
+          text/xml:
+            schema: {type: string}
+      responses:
+        '200':
+          description: Signed encrypted passive reply or a plain success acknowledgement for an ignored event.
+          content:
+            application/xml:
+              schema: {type: string, description: XML containing Encrypt, MsgSignature, TimeStamp and Nonce.}
+            text/plain: {schema: {type: string}}
+        '400': {$ref: '#/components/responses/Malformed'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/Disabled'}
+        '413': {$ref: '#/components/responses/TooLarge'}
+components:
+  securitySchemes:
+    MetaSignature: {type: apiKey, in: header, name: X-Hub-Signature-256, description: "HMAC-SHA256 of raw body using the Meta app secret, encoded as sha256= followed by lowercase hex."}
+    LineSignature: {type: apiKey, in: header, name: X-Line-Signature, description: Base64 HMAC-SHA256 of raw body using the LINE channel secret.}
+    WeixinMessageSignature: {type: apiKey, in: query, name: msg_signature, description: "SHA-1 of the lexically sorted concatenated callback token, timestamp, nonce and encrypted payload."}
+  parameters:
+    WeixinTimestamp: {in: query, name: timestamp, required: true, schema: {type: string, pattern: '^[0-9]+$'}, description: Current Unix seconds}
+    WeixinNonce: {in: query, name: nonce, required: true, schema: {type: string}}
+  responses:
+    Echo: {description: Verified challenge text, content: {text/plain: {schema: {type: string}}}}
+    Accepted: {description: Acknowledged queued or intentionally ignored events, content: {text/plain: {schema: {type: string}}}}
+    Denied: {description: Callback verification failed}
+    Disabled: {description: Channel disabled or path unknown}
+    Malformed: {description: Malformed callback}
+    TooLarge: {description: Body exceeds the gateway byte limit}
+    Unavailable: {description: Durable inbound work could not be accepted}

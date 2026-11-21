@@ -1,8 +1,10 @@
 # Pulse AI Privacy Policy
 
-**Last Updated: September 10, 2026**
+**Proposed update for the private beta and support channels, November 22, 2026**
 
 This Privacy Policy explains how **Pulse AI (@Pulseaihealthbot)** handles information when you use the bot through Telegram.
+
+The separate support inboxes described below apply only when the operator enables the relevant official business account.
 
 By using Pulse AI, you acknowledge that you have read and understood this Privacy Policy.
 
@@ -24,6 +26,10 @@ When you communicate with Pulse AI, information may include information made ava
 - Telegram username or basic profile information where available
 - Messages and questions
 - Symptoms or health information you choose to provide
+- Photos, captions and voice recordings you submit to the Telegram bot
+- A shared location for Care Finder, or the city you enter
+- A medication name, strength and schedule that you confirm for a reminder
+- Plan, usage count, subscription expiry and Telegram Stars payment reference
 - Language preferences
 - Technical information reasonably necessary to operate, protect, troubleshoot, and maintain the service
 
@@ -63,6 +69,8 @@ AI-generated information can contain mistakes, omissions, or outdated informatio
 
 Third-party AI providers process information according to their applicable terms, privacy policies, and data-processing practices.
 
+Telegram photo or text questions may be processed through OpenAI Responses. Voice messages may be sent to OpenAI for transcription. Pulse requests that Responses not store the response as application state. The provider has separate abuse-monitoring retention rules. The bot removes its temporary voice file after the request completes.
+
 ## 6. Telegram
 
 Pulse AI operates through Telegram.
@@ -77,6 +85,7 @@ Pulse AI may rely on third-party technology providers required to operate the se
 
 - Telegram
 - OpenAI or other artificial-intelligence providers
+- Google Maps Platform for facility search, which receives the facility type and supplied area or coordinates for a search
 - Cloud hosting providers, including infrastructure used to run the bot
 - Security and technical service providers
 
@@ -91,6 +100,14 @@ Information may be temporarily processed or retained when reasonably necessary t
 Information will not intentionally be retained longer than reasonably necessary for these purposes.
 
 Third-party providers may maintain information according to their own applicable retention policies.
+
+The Telegram service stores saved coordinates, confirmed medication reminders, usage and subscription information in PostgreSQL. Use /forgetlocation to clear saved coordinates and /reminders to stop an active reminder. Stopping a reminder changes its active status. For erasure of retained records, contact the project. The current database code has no automatic expiry for historical reminder records.
+
+### Optional WhatsApp, LINE and Weixin support inboxes
+
+When enabled, these inboxes answer fixed account, privacy and human-support menu choices. Please keep health questions and attachments out of them. The messaging provider receives the message you send. These support adapters do not fetch its attachments, send chat content to an AI model, or store the incoming message text. A provider account or device may retain its own message history.
+
+For WhatsApp and LINE replies, the service temporarily keeps an encrypted routing identifier or reply token together with the selected language and menu action. It clears this payload after the attempt reaches a terminal state. While its worker is running, it prunes the associated keyed event identifier and delivery state after eight days. Backups have a separate lifecycle. The Weixin service uses the incoming connection for its fixed response. The gateway does not link identities across channels.
 
 ## 9. Data Sharing and Sale
 
@@ -166,7 +183,7 @@ For privacy questions, concerns, or data-related requests concerning Pulse AI:
 
 **Telegram Bot:** @Pulseaihealthbot
 
-**Email:** @Pulseaihealthbot
+**Email:** pulse.support.ai@gmail.com
 
 ## 18. Important Emergency Notice
 
